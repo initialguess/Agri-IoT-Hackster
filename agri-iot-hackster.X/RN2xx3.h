@@ -19,12 +19,12 @@ extern "C" {
 #define DEBUG
 
 /* Enable one activation method by commenting out the other */
-#define ABP    // Activation By Personalization
-//#define OTAA   // Over The Air Activation
+//#define ABP    // Activation By Personalization
+#define OTAA   // Over The Air Activation
     
    
 /* Device EUI and Address */
-#define HWEUI  "0004A30B00F8617E"    
+#define HWEUI  "0004A30B0023916E"    
 #define DEVEUI "70B3D57ED005A47B"
 #define DEVADDR "260C27D4"
     
@@ -34,7 +34,7 @@ extern "C" {
    
 /* OTAA Session Keys */
 #define APPEUI "0000000000000000"
-#define APPKEY "011CBAD910D4984C9C1868E3D1683973" 
+#define APPKEY "9399801EF0276D43104BF342DF385CF5" 
 
 /* LR2 Command and Response Strings Maximum Size */
 #define RN2xx3_BUFFER_SIZE            255

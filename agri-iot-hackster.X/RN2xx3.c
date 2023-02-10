@@ -36,7 +36,7 @@ void RN2xx3_resp()
         }
     }
     USART0_sendByte('\n');
-    _delay_ms(500);   
+    _delay_ms(100);   
 }
 
 void RN2xx3_resp2()
@@ -180,6 +180,7 @@ void RN2xx3_config_ABP()
     RN2xx3_cmd("mac save\r\n");
     USART0_sendStr("\n");
     _delay_ms(100);
+    
 }
 /* Only DEVEUI, APPKEY, and APPEUI are necessary for OTAA, but DEVADDR, APPSKEY,
  * and NWKSKEY are cleared.  When registering devices on TTN, the HWEUI was used
@@ -189,6 +190,15 @@ void RN2xx3_config_OTAA()
 {
     USART0_sendStr("\n\nConfiguring RN2xx3 For OTAA join\n");
     USART0_sendStr("-----------------------------------------------------------------------\n");
+    
+    /* Temporarily pause the LoRaWAN stack to configure radio as OTAA join only
+     * works with spreading factors below sf12 in US
+     */
+    RN2xx3_cmd("mac pause\r\n");
+    _delay_ms(500);
+    RN2xx3_cmd("radio set sf sf7\r\n");
+    RN2xx3_cmd("mac resume\r\n");
+    
     
     RN2xx3_cmd("mac set deveui " HWEUI "\r\n");
     RN2xx3_cmd("mac set devaddr 00000000\r\n");
@@ -221,13 +231,7 @@ void RN2xx3_join_OTAA()
 
     //RN2xx3_cmd("mac set dr 2\r\n");
     
-    /* Temporarily pause the LoRaWAN stack to configure radio as OTAA join only
-     * works with spreading factors below sf12 in US
-     */
-    RN2xx3_cmd("mac pause\r\n");
-    RN2xx3_cmd("radio set sf sf7\r\n");
-    RN2xx3_cmd("mac resume\r\n");
-    
+
     //For debug purposes, prints the command on the terminal
     USART0_sendStr("Tx: mac join otaa\n");
     
