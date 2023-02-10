@@ -195,8 +195,8 @@ void RN2xx3_config_OTAA()
      * works with spreading factors below sf12 in US
      */
     RN2xx3_cmd("mac pause\r\n");
-    _delay_ms(500);
-    RN2xx3_cmd("radio set sf sf7\r\n");
+    //_delay_ms(500);
+    //RN2xx3_cmd("radio set sf sf7\r\n");
     RN2xx3_cmd("mac resume\r\n");
     
     

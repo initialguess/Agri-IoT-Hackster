@@ -19,8 +19,8 @@ extern "C" {
 #define DEBUG
 
 /* Enable one activation method by commenting out the other */
-//#define ABP    // Activation By Personalization
-#define OTAA   // Over The Air Activation
+#define ABP    // Activation By Personalization
+//#define OTAA   // Over The Air Activation
     
    
 /* Device EUI and Address */

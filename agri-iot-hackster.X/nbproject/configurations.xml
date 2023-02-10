@@ -117,6 +117,7 @@
                    projectFiles="false">
       <itemPath>Makefile</itemPath>
       <itemPath>avr64dd32_uart_button.mc3</itemPath>
+      <itemPath>agri-iot-hackster.mc3</itemPath>
     </logicalFolder>
   </logicalFolder>
   <projectmakefile>Makefile</projectmakefile>
