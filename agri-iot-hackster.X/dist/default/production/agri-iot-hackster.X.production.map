@@ -1282,7 +1282,7 @@ END GROUP
 .debug_pubnames
  *(.debug_pubnames)
 
-.debug_info     0x0000000000000000     0xebad
+.debug_info     0x0000000000000000     0xebb8
  *(.debug_info .gnu.linkonce.wi.*)
  .debug_info    0x0000000000000000     0x22a4 C:/Users/C70348/.mchp_packs/Microchip/AVR-Dx_DFP/2.1.152/xc8/avr/lib/avrxmega2/memx-const/mapped/crtavr64dd32.o
  .debug_info    0x00000000000022a4     0x1037 build/default/production/mcc_generated_files/adc/src/adc0.o
@@ -1304,9 +1304,9 @@ END GROUP
  .debug_info    0x000000000000b1cf      0xba6 build/default/production/TWI.o
  .debug_info    0x000000000000bd75      0xf0d build/default/production/bme280.o
  .debug_info    0x000000000000cc82      0x788 build/default/production/ringBuffer.o
- .debug_info    0x000000000000d40a     0x17a3 build/default/production/RN2xx3.o
+ .debug_info    0x000000000000d40a     0x17ae build/default/production/RN2xx3.o
 
-.debug_abbrev   0x0000000000000000     0x3d6e
+.debug_abbrev   0x0000000000000000     0x3d75
  *(.debug_abbrev)
  .debug_abbrev  0x0000000000000000     0x20ce C:/Users/C70348/.mchp_packs/Microchip/AVR-Dx_DFP/2.1.152/xc8/avr/lib/avrxmega2/memx-const/mapped/crtavr64dd32.o
  .debug_abbrev  0x00000000000020ce      0x25d build/default/production/mcc_generated_files/adc/src/adc0.o
@@ -1328,7 +1328,7 @@ END GROUP
  .debug_abbrev  0x0000000000003625      0x191 build/default/production/TWI.o
  .debug_abbrev  0x00000000000037b6      0x22d build/default/production/bme280.o
  .debug_abbrev  0x00000000000039e3      0x17c build/default/production/ringBuffer.o
- .debug_abbrev  0x0000000000003b5f      0x20f build/default/production/RN2xx3.o
+ .debug_abbrev  0x0000000000003b5f      0x216 build/default/production/RN2xx3.o
 
 .debug_line     0x0000000000000000     0x40e6
  *(.debug_line .debug_line.* .debug_line_end)

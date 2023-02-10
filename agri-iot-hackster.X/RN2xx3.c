@@ -97,7 +97,7 @@ void RN2xx3_getHWEUI() {
     _delay_ms(100); 
 }
 
-void RN2xx3_cmd(char *str)
+void RN2xx3_cmd(const char *str)
 {
     //Print Command to the Terminal for Debug Purposes
     USART0_sendStr("\r\nTx: ");
@@ -289,7 +289,7 @@ void RN2xx3_join_TTN()
     printf("\nPress button to transmit data\n");
 }
 
-void RN2xx3_tx_cnf(char *str)
+void RN2xx3_tx_cnf(const char *str)
 {
     /* For debug purposes, prints the command on the terminal */
     USART0_sendStr("\n\nTransmitting Data\n");
@@ -314,7 +314,7 @@ void RN2xx3_tx_cnf(char *str)
     RN2xx3_save();
 }
 
-void RN2xx3_tx_uncnf(char *str)
+void RN2xx3_tx_uncnf(const char *str)
 {
     /* For debug purposes, prints the command on the terminal */
     USART0_sendStr("\n\nTransmitting Data\n");

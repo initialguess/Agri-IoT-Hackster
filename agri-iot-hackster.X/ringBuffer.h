@@ -49,7 +49,7 @@ extern "C" {
     void ringBuffer_init(ring_buffer_t* rBuffer, char* c, uint8_t size);
     //void buffers_init(buffers_t* rbs, ring_buffer_t* tx_buff, ring_buffer_t* rx_buff);
     void ringBuffer_push(ring_buffer_t* rBuffer, char c);
-    void ringBuffer_pushStr(ring_buffer_t* rBuffer, char *str);
+    void ringBuffer_pushStr(ring_buffer_t* rBuffer, const char *str);
     char ringBuffer_pop(ring_buffer_t* rBuffer);
     uint8_t ringBuffer_count(ring_buffer_t* rBuffer);
     void ringBuffer_reset(ring_buffer_t* rBuffer);

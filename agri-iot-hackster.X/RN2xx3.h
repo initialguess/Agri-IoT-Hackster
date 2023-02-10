@@ -45,7 +45,7 @@ extern "C" {
     
     void RN2xx3_resp(void);
     void RN2xx3_resp2(void);
-    void RN2xx3_cmd(char *str);
+    void RN2xx3_cmd(const char *str);
     void RN2xx3_getHWEUI();
     void RN2xx3_init(void);
     void RN2xx3_save(void);
@@ -55,8 +55,8 @@ extern "C" {
     void RN2xx3_join_OTAA(void);
     void RN2xx3_join_ABP(void);
     void RN2xx3_join_TTN(void);
-    void RN2xx3_tx_cnf(char *str);
-    void RN2xx3_tx_uncnf(char *str);
+    void RN2xx3_tx_cnf(const char *str);
+    void RN2xx3_tx_uncnf(const char *str);
     //Searches for STR in the buffer
     //Returns true if found, false if not.
     //bool ringBuffer_find(ring_buffer_t* buffer, const char* str);

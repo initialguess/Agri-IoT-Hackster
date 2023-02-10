@@ -25,7 +25,7 @@ void ringBuffer_push(ring_buffer_t* rb, char c) {
 }
 
 /* Adds a string to the buffer */
-void ringBuffer_pushStr(ring_buffer_t* rBuffer, char *str) {
+void ringBuffer_pushStr(ring_buffer_t* rBuffer, const char *str) {
     uint8_t pos = 0;
     char c = str[pos];
     while(rBuffer->tail + 1 != rBuffer->head && c) {
