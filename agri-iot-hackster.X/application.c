@@ -23,7 +23,8 @@ static sensor_data_t data;
 /* Event Flags for User Interface */
 static volatile uint16_t event_flags = 0;
 
-/* State Machine Initial State: Change to operate in DUT mode, i.e. TEST_LORA */
+/* State Machine Initial State: Change to test functionality, i.e. TEST_LORA,
+ * otherwise define as INIT for normal operations */
 static STATE state = INIT;
 
 /* Keep track of the number of transmissions */
@@ -144,8 +145,8 @@ void getSensorData(sensor_data_t *data)
     data->press = BME280_getPressure() / 10;
     data->humid = (uint8_t) BME280_getHumidity();
     data->moist = getMoistureMeasurement();
-    data->battery = 100;
-    data->numTx = numTx;
+    //data->battery = 100;
+    //data->numTx = numTx;
     
 #ifdef DEBUG
     printSensorData(data); //To compare and demonstrate successful transmission
@@ -164,16 +165,14 @@ void printSensorData(sensor_data_t *data)
     printf("Moisture: %u%% \r\n", data->moist);
     printf("Pressure: %u hPa\r\n", data->press * 10);
     printf("Temperature: %i C \r\n", data->temp);
-    printf("Battery Level: %u%% \r\n\n", data->battery);
     printf("\nJSON Format\r\n");
     printf("-----------------------------------------------------------------------\n");
-    printf("Payload: { temp: %i, battery: %u, humidity: %u, moisture: %u, pressure: %u, numTx: %u\r\n\n}", 
+    printf("Payload: { temp: %i, humidity: %u, moisture: %u, pressure: %u\r\n\n}", 
             data->temp,
-            data->battery,
+            //data->battery,
             data->humid, 
             data->moist, 
-            data->press * 10,
-            data->numTx
+            data->press * 10
             );
 }
 
@@ -194,13 +193,9 @@ void formatPayload(char *str, sensor_data_t *data) {
     str[5] = hex[data->moist & 0x0F];
     str[6] = hex[((data->press >> 4) & 0x0F)];
     str[7] = hex[data->press & 0x0F];
-    str[8] = hex[((data->battery >> 4) & 0x0F)];
-    str[9] = hex[data->battery & 0x0F];
-    str[10] = hex[((data->numTx >> 4) & 0x0F)];
-    str[11] = hex[data->numTx & 0x0F];
-    str[12] = '\r';
-    str[13] = '\n';
-    str[14] = '\0';
+    str[8] = '\r';
+    str[9] = '\n';
+    str[10] = '\0';
 }
 
 void stateMachine()
@@ -262,7 +257,13 @@ void stateMachine()
         case TTN_JOIN:
             RN2xx3_config_TTN();
             RN2xx3_join_TTN();
+#ifdef ABP
             state = TX_CNF;
+#endif
+            
+#ifdef OTAA
+            state = TEST_LORA;
+#endif
             break;
 
         case TX_CNF:
@@ -318,8 +319,7 @@ void stateMachine()
             break;
             
         case TEST_LORA:
-            RN2xx3_init();
-            state = WAIT_FOR_TEST;
+            RN2xx3_interface();
             break;
 
         case TEST_BME280:

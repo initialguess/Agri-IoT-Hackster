@@ -170,11 +170,12 @@ void RN2xx3_config_ABP()
 {
     USART0_sendStr("\n\nConfiguring RN2xx3 For ABP join\n");
     USART0_sendStr("-----------------------------------------------------------------------\n");
+    RN2xx3_cmd("mac set dr 3\r\n");
     RN2xx3_cmd("mac set deveui " DEVEUI "\r\n");
     RN2xx3_cmd("mac set devaddr " DEVADDR "\r\n");
     RN2xx3_cmd("mac set appskey " APPSKEY "\r\n");
     RN2xx3_cmd("mac set nwkskey " NWKSKEY "\r\n");
-    RN2xx3_cmd("mac set ar on\r\n");
+    //RN2xx3_cmd("mac set ar on\r\n");
     RN2xx3_cmd("mac set rxdelay1 5000\r\n");
     RN2xx3_cmd("mac set adr on\r\n");
     RN2xx3_cmd("mac save\r\n");
@@ -195,11 +196,8 @@ void RN2xx3_config_OTAA()
      * works with spreading factors below sf12 in US
      */
     RN2xx3_cmd("mac pause\r\n");
-    //_delay_ms(500);
-    //RN2xx3_cmd("radio set sf sf7\r\n");
     RN2xx3_cmd("mac resume\r\n");
-    
-    
+    RN2xx3_cmd("mac set dr 0\r\n");
     RN2xx3_cmd("mac set deveui " HWEUI "\r\n");
     RN2xx3_cmd("mac set devaddr 00000000\r\n");
     RN2xx3_cmd("mac set appskey 00000000000000000000000000000000\r\n");
@@ -229,8 +227,9 @@ void RN2xx3_join_OTAA()
     USART0_sendStr("\n\nJoining TTN with OTAA\n");
     USART0_sendStr("-----------------------------------------------------------------------\n");
 
-    //RN2xx3_cmd("mac set dr 2\r\n");
-    
+//    RN2xx3_cmd("mac pause\r\n");
+//    RN2xx3_cmd("radio set sf sf7\r\n");
+//    RN2xx3_cmd("mac resume\r\n");
 
     //For debug purposes, prints the command on the terminal
     USART0_sendStr("Tx: mac join otaa\n");
@@ -309,7 +308,7 @@ void RN2xx3_tx_cnf(const char *str)
             UART1_Write(ringBuffer_pop(&tx_buffer));
         }
     }
-    _delay_ms(100);
+    _delay_ms(500);
     RN2xx3_resp2();
     RN2xx3_save();
 }
@@ -337,6 +336,48 @@ void RN2xx3_tx_uncnf(const char *str)
     _delay_ms(100);
     RN2xx3_resp2();
     RN2xx3_save();
+}
+
+void RN2xx3_get_status()
+{
+    uint8_t recv = 0;
+    const char* str = "mac get status\r\n";
+    
+    //Print Command to the Terminal for Debug Purposes
+    USART0_sendStr("\r\nTx: ");
+    USART0_sendStr(str);
+    
+    //Add the command string to the RN2xx3 txBuffer
+    ringBuffer_pushStr(&tx_buffer, str);
+    
+    //Transmit over the RN2xx3 UART
+    for (uint8_t i = 0; str[i] != '\0'; )
+    {
+        if (ringBuffer_count(&tx_buffer) && UART1_IsTxReady())
+        {
+            UART1_Write(ringBuffer_pop(&tx_buffer));
+            i++;
+        }
+    }
+    _delay_ms(100);
+    
+    USART0_sendStr("Rx: ");
+    while(recv != 1)
+    {
+        if(UART1__IsRxReady()) {
+            ringBuffer_push(&rx_buffer, UART1_Read());
+        }
+
+        if(ringBuffer_count(&rx_buffer) && UART0_IsTxReady()) {
+            char rx = ringBuffer_pop(&rx_buffer);
+            USART0_sendByte(rx);
+            if(rx == '\n') {
+                recv++;
+            }  
+        }
+    }
+    USART0_sendByte('\n');
+    _delay_ms(500); 
 }
 
 void RN2xx3_interface() 

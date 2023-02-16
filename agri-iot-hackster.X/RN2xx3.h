@@ -24,17 +24,17 @@ extern "C" {
     
    
 /* Device EUI and Address */
-#define HWEUI  "0004A30B0023916E"    
-#define DEVEUI "70B3D57ED005A47B"
-#define DEVADDR "260C27D4"
+#define HWEUI  "0004A30B00F8617E"    
+#define DEVEUI "70B3D57ED005A6B7"
+#define DEVADDR "260C886C"
     
 /* ABP Session Keys */
-#define NWKSKEY "2A5118E0D02A330FF09F8686EA2CF008"
-#define APPSKEY "74523A3B487E5D9BBAE746D0C58B7A0C"
+#define NWKSKEY "DAFE8912122161E06699136E0CE33F0C"
+#define APPSKEY "8FC0A90506C0A86EE4E288A27B24B647"
    
 /* OTAA Session Keys */
 #define APPEUI "0000000000000000"
-#define APPKEY "9399801EF0276D43104BF342DF385CF5" 
+#define APPKEY "5029B788B0257F2A2419BA39DA3933A7" 
 
 /* LR2 Command and Response Strings Maximum Size */
 #define RN2xx3_BUFFER_SIZE            255
@@ -46,6 +46,7 @@ extern "C" {
     void RN2xx3_resp(void);
     void RN2xx3_resp2(void);
     void RN2xx3_cmd(const char *str);
+    void RN2xx3_mac_pause(void);
     void RN2xx3_getHWEUI();
     void RN2xx3_init(void);
     void RN2xx3_save(void);
@@ -60,6 +61,7 @@ extern "C" {
     //Searches for STR in the buffer
     //Returns true if found, false if not.
     //bool ringBuffer_find(ring_buffer_t* buffer, const char* str);
+    void RN2xx3_get_status();
     void RN2xx3_interface();
     void RN2xx3_sleep(uint32_t ms);
     
