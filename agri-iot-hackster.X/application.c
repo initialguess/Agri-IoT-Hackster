@@ -12,7 +12,7 @@ volatile uint32_t lastsecs = 0; // reference to determine total elapsed time in 
 volatile uint32_t soilSecs = 0;
 
 /* LR2 payload for TTN - String of hex characters representing sensor data */
-char payload[15];
+char payload[11];
 
 /* Moisture */
 static soil_moist_t soil;

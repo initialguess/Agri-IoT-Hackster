@@ -170,12 +170,14 @@ void RN2xx3_config_ABP()
 {
     USART0_sendStr("\n\nConfiguring RN2xx3 For ABP join\n");
     USART0_sendStr("-----------------------------------------------------------------------\n");
-    RN2xx3_cmd("mac set dr 3\r\n");
+    RN2xx3_cmd("mac pause\r\n");
+    RN2xx3_cmd("mac resume\r\n");
+    RN2xx3_cmd("mac set dr 4\r\n");
     RN2xx3_cmd("mac set deveui " DEVEUI "\r\n");
     RN2xx3_cmd("mac set devaddr " DEVADDR "\r\n");
     RN2xx3_cmd("mac set appskey " APPSKEY "\r\n");
     RN2xx3_cmd("mac set nwkskey " NWKSKEY "\r\n");
-    //RN2xx3_cmd("mac set ar on\r\n");
+    RN2xx3_cmd("mac set ar on\r\n");
     RN2xx3_cmd("mac set rxdelay1 5000\r\n");
     RN2xx3_cmd("mac set adr on\r\n");
     RN2xx3_cmd("mac save\r\n");
@@ -197,7 +199,7 @@ void RN2xx3_config_OTAA()
      */
     RN2xx3_cmd("mac pause\r\n");
     RN2xx3_cmd("mac resume\r\n");
-    RN2xx3_cmd("mac set dr 0\r\n");
+    RN2xx3_cmd("mac set dr 4\r\n");
     RN2xx3_cmd("mac set deveui " HWEUI "\r\n");
     RN2xx3_cmd("mac set devaddr 00000000\r\n");
     RN2xx3_cmd("mac set appskey 00000000000000000000000000000000\r\n");
