@@ -166,20 +166,61 @@ void RN2xx3_save(void)
     _delay_ms(100);
 }
 
+void RN2xx3_set_channel_range() {
+    char str[32];
+    for(uint8_t i = 0; i < 71; i++) {
+        if(i <= 63) {
+            sprintf(str, "mac set ch drrange %d 0 3\r\n", i);
+            RN2xx3_cmd(str);
+        }
+        else {
+            sprintf(str, "mac set ch drrange %d 4 4\r\n", i);
+            RN2xx3_cmd(str);
+        } 
+    };
+}
+
+/* The RN2xx3 firmware is designed to match the LoRaWAN? specification. The 
+ * specification describes a 64(+8) channel plan, making the best use of the 
+ * available spectrum in the 915 MHz band. However, the reality is that 64(+8) 
+ * channel gateways are still expensive. Most trials and prototypes are using 
+ * eight-channel gateways, which are cheaper and widely available. If you are 
+ * using the RN2903 with default settings (all channels on) and connecting to an
+ *  eight-channel gateway, then seven out of eight packets will fall on a 
+ * channel that the gateway is not listening to. Seven packets will be dropped 
+ * and only one will pass through. This can be easily corrected by using the 
+ * mac set ch status in a loop to disable all the unused channels*/
+void RN2xx3_disable_unused_channels() {
+    char str[32];
+    for(uint8_t i = 0; i < 72; i++) {
+        if(i >= 8 && i < 16 )  {
+            sprintf(str,"mac set ch status %d on\r\n", i);
+            RN2xx3_cmd(str);
+        }
+        else    {
+            sprintf(str,"mac set ch status %d off\r\n", i);
+            RN2xx3_cmd(str);
+        }
+    };
+}
+
+
+
 void RN2xx3_config_ABP() 
 {
     USART0_sendStr("\n\nConfiguring RN2xx3 For ABP join\n");
     USART0_sendStr("-----------------------------------------------------------------------\n");
-    RN2xx3_cmd("mac pause\r\n");
-    RN2xx3_cmd("mac resume\r\n");
-    RN2xx3_cmd("mac set dr 4\r\n");
     RN2xx3_cmd("mac set deveui " DEVEUI "\r\n");
     RN2xx3_cmd("mac set devaddr " DEVADDR "\r\n");
     RN2xx3_cmd("mac set appskey " APPSKEY "\r\n");
     RN2xx3_cmd("mac set nwkskey " NWKSKEY "\r\n");
     RN2xx3_cmd("mac set ar on\r\n");
     RN2xx3_cmd("mac set rxdelay1 5000\r\n");
+    RN2xx3_cmd("mac set rx2 12 923300000\r\n");
     RN2xx3_cmd("mac set adr on\r\n");
+    //RN2xx3_set_channel_range();
+    RN2xx3_disable_unused_channels();
+    RN2xx3_cmd("mac set dr 4\r\n");
     RN2xx3_cmd("mac save\r\n");
     USART0_sendStr("\n");
     _delay_ms(100);
@@ -198,8 +239,7 @@ void RN2xx3_config_OTAA()
      * works with spreading factors below sf12 in US
      */
     RN2xx3_cmd("mac pause\r\n");
-    RN2xx3_cmd("mac resume\r\n");
-    RN2xx3_cmd("mac set dr 4\r\n");
+    RN2xx3_cmd("mac resume\r\n");  
     RN2xx3_cmd("mac set deveui " HWEUI "\r\n");
     RN2xx3_cmd("mac set devaddr 00000000\r\n");
     RN2xx3_cmd("mac set appskey 00000000000000000000000000000000\r\n");
@@ -208,7 +248,10 @@ void RN2xx3_config_OTAA()
     RN2xx3_cmd("mac set appeui " APPEUI "\r\n");
     RN2xx3_cmd("mac set ar on\r\n");
     RN2xx3_cmd("mac set rxdelay1 5000\r\n");
+    RN2xx3_cmd("mac set rx2 12 923300000\r\n");
     RN2xx3_cmd("mac set adr on\r\n");
+    RN2xx3_disable_unused_channels();
+    RN2xx3_cmd("mac set dr 4\r\n");
     RN2xx3_cmd("mac save\r\n");
     USART0_sendStr("\n");
     _delay_ms(100);  
@@ -228,10 +271,6 @@ void RN2xx3_join_OTAA()
 {
     USART0_sendStr("\n\nJoining TTN with OTAA\n");
     USART0_sendStr("-----------------------------------------------------------------------\n");
-
-//    RN2xx3_cmd("mac pause\r\n");
-//    RN2xx3_cmd("radio set sf sf7\r\n");
-//    RN2xx3_cmd("mac resume\r\n");
 
     //For debug purposes, prints the command on the terminal
     USART0_sendStr("Tx: mac join otaa\n");

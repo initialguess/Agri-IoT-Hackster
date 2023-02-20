@@ -19,22 +19,22 @@ extern "C" {
 #define DEBUG
 
 /* Enable one activation method by commenting out the other */
-#define ABP    // Activation By Personalization
-//#define OTAA   // Over The Air Activation
+//#define ABP    // Activation By Personalization
+#define OTAA   // Over The Air Activation
     
    
 /* Device EUI and Address */
-#define HWEUI  "0004A30B00F89B74"    
-#define DEVEUI "70B3D57ED005A81A"
-#define DEVADDR "260C7D8D"
+#define HWEUI  "0004A30B0023916E"    
+#define DEVEUI "70B3D57ED005AA0B"
+#define DEVADDR "260C22B6"
     
 /* ABP Session Keys */
-#define NWKSKEY "1B1FCA3D4F04971EC4D91F04F09C8677"
-#define APPSKEY "164F87206406F235B4ECE031AC408CE7"
+#define NWKSKEY "6C070B126529F856D4627E5B42535035"
+#define APPSKEY "501C3129E36C0C565DDD311285C8F534"
    
 /* OTAA Session Keys */
 #define APPEUI "0000000000000000"
-#define APPKEY "5029B788B0257F2A2419BA39DA3933A7" 
+#define APPKEY "A264F561408DAEFD0BDD4A8410FAB273" 
 
 /* LR2 Command and Response Strings Maximum Size */
 #define RN2xx3_BUFFER_SIZE            255
@@ -50,6 +50,8 @@ extern "C" {
     void RN2xx3_getHWEUI();
     void RN2xx3_init(void);
     void RN2xx3_save(void);
+    void RN2xx3_set_channel_range();
+    void RN2xx3_disable_unused_channels();
     void RN2xx3_config_OTAA(void);
     void RN2xx3_config_ABP(void);
     void RN2xx3_config_TTN(void);

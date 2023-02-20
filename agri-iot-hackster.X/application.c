@@ -167,9 +167,8 @@ void printSensorData(sensor_data_t *data)
     printf("Temperature: %i C \r\n", data->temp);
     printf("\nJSON Format\r\n");
     printf("-----------------------------------------------------------------------\n");
-    printf("Payload: { temp: %i, humidity: %u, moisture: %u, pressure: %u\r\n\n}", 
+    printf("Payload: { temp: %i, humidity: %u, moisture: %u, pressure: %u }\r\n\n", 
             data->temp,
-            //data->battery,
             data->humid, 
             data->moist, 
             data->press * 10
@@ -196,6 +195,8 @@ void formatPayload(char *str, sensor_data_t *data) {
     str[8] = '\r';
     str[9] = '\n';
     str[10] = '\0';
+    
+    printf("Payload string: %s\nnumTx: %d\n", str, numTx);
 }
 
 void stateMachine()
@@ -262,7 +263,7 @@ void stateMachine()
 #endif
             
 #ifdef OTAA
-            state = TEST_LORA;
+            state = TX_CNF;
 #endif
             break;
 
@@ -282,7 +283,8 @@ void stateMachine()
         case SLEEP:
             if(secs == 180) {
                 //event_flags &= ~SLEEP_TIMER_FLAG;
-                if(numTx % 10 == 0) {
+                /* Twice per day send cnf Payload */
+                if(numTx % 240 == 0) {
                     state = TX_CNF;
                 }
                 else {
