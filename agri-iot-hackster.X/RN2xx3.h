@@ -24,7 +24,7 @@ extern "C" {
     
    
 /* Device EUI and Address */
-#define HWEUI  "0004A30B0023916E"    
+#define HWEUI  "0004A30B00F8617E"    
 #define DEVEUI "70B3D57ED005AA0B"
 #define DEVADDR "260C22B6"
     
@@ -34,7 +34,7 @@ extern "C" {
    
 /* OTAA Session Keys */
 #define APPEUI "0000000000000000"
-#define APPKEY "A264F561408DAEFD0BDD4A8410FAB273" 
+#define APPKEY "9FC6E26FE94959A64D4D3C0DF22E8352" 
 
 /* LR2 Command and Response Strings Maximum Size */
 #define RN2xx3_BUFFER_SIZE            255

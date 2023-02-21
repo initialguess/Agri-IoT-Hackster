@@ -251,7 +251,6 @@ void RN2xx3_config_OTAA()
     RN2xx3_cmd("mac set rx2 12 923300000\r\n");
     RN2xx3_cmd("mac set adr on\r\n");
     RN2xx3_disable_unused_channels();
-    RN2xx3_cmd("mac set dr 4\r\n");
     RN2xx3_cmd("mac save\r\n");
     USART0_sendStr("\n");
     _delay_ms(100);  
