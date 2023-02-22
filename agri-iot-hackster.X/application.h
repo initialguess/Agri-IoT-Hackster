@@ -72,8 +72,6 @@ extern "C" {
 
 #define READ_INTERVAL 180;  //Time between sensor readings
 
-
-
 typedef enum    {
     INIT,
     TTN_NOT_JOINED,
@@ -94,9 +92,7 @@ typedef struct
     int8_t temp;         // Air Temperature    Weather Click
     uint8_t humid;       // Humidity           Weather Click
     uint8_t moist;       // Soil Moisture      ADCC
-    uint8_t press;      // Pressure           Weather Click
-    //uint8_t battery;     // Battery Level
-    //uint8_t numTx;       // LoRa Tx Number     
+    uint8_t press;      // Pressure           Weather Click   
 
 } sensor_data_t;
 

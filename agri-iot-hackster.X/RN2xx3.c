@@ -1,6 +1,3 @@
-
-
-
 #include "mcc_generated_files/system/system.h"
 #include "RN2xx3.h"
 #include "ringBuffer.h"
