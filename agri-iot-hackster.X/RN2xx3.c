@@ -148,12 +148,6 @@ void RN2xx3_init()
     USART0_sendByte('\n');
     _delay_ms(100);
     
-    
-#ifdef FACTORY_RESET
-    /* Clear all values in EEPROM to re-join with new key over OTAA */
-    RN2xx3_cmd("sys factoryRESET\r\n");
-#endif
-    
     RN2xx3_getHWEUI();
 }
 
@@ -161,20 +155,6 @@ void RN2xx3_save(void)
 {
     RN2xx3_cmd("mac save\r\n");
     _delay_ms(100);
-}
-
-void RN2xx3_set_channel_range() {
-    char str[32];
-    for(uint8_t i = 0; i < 71; i++) {
-        if(i <= 63) {
-            sprintf(str, "mac set ch drrange %d 0 3\r\n", i);
-            RN2xx3_cmd(str);
-        }
-        else {
-            sprintf(str, "mac set ch drrange %d 4 4\r\n", i);
-            RN2xx3_cmd(str);
-        } 
-    };
 }
 
 /* The RN2xx3 firmware is designed to match the LoRaWAN? specification. The 
@@ -187,18 +167,75 @@ void RN2xx3_set_channel_range() {
  * channel that the gateway is not listening to. Seven packets will be dropped 
  * and only one will pass through. This can be easily corrected by using the 
  * mac set ch status in a loop to disable all the unused channels*/
-void RN2xx3_disable_unused_channels() {
+void RN2xx3_set_freq_plan(RN2xx3_t moduleType) {
     char str[32];
-    for(uint8_t i = 0; i < 72; i++) {
-        if(i >= 8 && i < 16 )  {
-            sprintf(str,"mac set ch status %d on\r\n", i);
-            RN2xx3_cmd(str);
-        }
-        else    {
-            sprintf(str,"mac set ch status %d off\r\n", i);
-            RN2xx3_cmd(str);
-        }
-    };
+    
+    switch(moduleType)
+    {
+        case RN2483:
+            /* Set Rx2 Window */
+            RN2xx3_cmd("mac set rx2 3 869525000");
+            
+            /* Channel 0 */
+            RN2xx3_cmd("mac set ch dcycle 0 799");
+            
+            /* Channel 1 */
+            RN2xx3_cmd("mac set ch drrange 1 0 6");
+            RN2xx3_cmd("mac set ch dcycle 1 799");
+            
+            /* Channel 2 */
+            RN2xx3_cmd("mac set ch dcycle 2 799");
+            
+            /* Channel 3 */
+            RN2xx3_cmd("mac set ch freq 3 867100000");
+            RN2xx3_cmd("mac set ch drrange 3 0 5");
+            RN2xx3_cmd("mac set ch dcycle 3 799");
+            RN2xx3_cmd("mac set ch status 3 on");
+            
+            /* Channel 4 */
+            RN2xx3_cmd("mac set ch freq 4 867300000");
+            RN2xx3_cmd("mac set ch drrange 4 0 5");
+            RN2xx3_cmd("mac set ch dcycle 4 799");
+            RN2xx3_cmd("mac set ch status 4 on");
+            
+            /* Channel 5 */
+            RN2xx3_cmd("mac set ch freq 5 867500000");
+            RN2xx3_cmd("mac set ch drrange 5 0 5");
+            RN2xx3_cmd("mac set ch dcycle 5 799");
+            RN2xx3_cmd("mac set ch status 5 on");
+            
+            /* Channel 6 */
+            RN2xx3_cmd("mac set ch freq 6 867700000");
+            RN2xx3_cmd("mac set ch drrange 6 0 5");
+            RN2xx3_cmd("mac set ch dcycle 6 799");
+            RN2xx3_cmd("mac set ch status 6 on");
+            
+            /* Channel 7 */
+            RN2xx3_cmd("mac set ch freq 7 867900000");
+            RN2xx3_cmd("mac set ch drrange 7 0 5");
+            RN2xx3_cmd("mac set ch dcycle 7 799");
+            RN2xx3_cmd("mac set ch status 7 on");
+            
+            break;
+            
+        case RN2903:
+            for(uint8_t i = 0; i < 72; i++) {
+                if(i >= 8 && i < 16 )  {
+                    sprintf(str,"mac set ch status %d on\r\n", i);
+                    RN2xx3_cmd(str);
+                }
+                else    {
+                    sprintf(str,"mac set ch status %d off\r\n", i);
+                    RN2xx3_cmd(str);
+                }
+            };
+            
+            break;
+            
+        default:
+            printf("Module not specified\n");
+    }
+
 }
 
 
@@ -216,7 +253,7 @@ void RN2xx3_config_ABP()
     RN2xx3_cmd("mac set rx2 12 923300000\r\n");
     RN2xx3_cmd("mac set adr on\r\n");
     //RN2xx3_set_channel_range();
-    RN2xx3_disable_unused_channels();
+    RN2xx3_set_freq_plan(RN2903);
     RN2xx3_cmd("mac set dr 4\r\n");
     RN2xx3_cmd("mac save\r\n");
     USART0_sendStr("\n");
@@ -247,7 +284,8 @@ void RN2xx3_config_OTAA()
     RN2xx3_cmd("mac set rxdelay1 5000\r\n");
     RN2xx3_cmd("mac set rx2 12 923300000\r\n");
     RN2xx3_cmd("mac set adr on\r\n");
-    RN2xx3_disable_unused_channels();
+    RN2xx3_set_freq_plan(RN2903);
+    RN2xx3_cmd("mac set dr 3\r\n");
     RN2xx3_cmd("mac save\r\n");
     USART0_sendStr("\n");
     _delay_ms(100);  

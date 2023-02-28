@@ -16,15 +16,14 @@ extern "C" {
     
 /* Enable print statements for Rx and Tx
  * TODO: add if def's around send to terminal cmds */
-#define DEBUG
+#define DEBUG  
 
 /* Enable one activation method by commenting out the other */
 //#define ABP    // Activation By Personalization
 #define OTAA   // Over The Air Activation
     
-   
 /* Device EUI and Address */
-#define HWEUI  "0004A30B00F89B74"    
+#define HWEUI  "0004A30B00F8617E"    
 #define DEVEUI "70B3D57ED005AA0B"
 #define DEVADDR "260C22B6"
     
@@ -34,14 +33,26 @@ extern "C" {
    
 /* OTAA Session Keys */
 #define APPEUI "0000000000000000"
-#define APPKEY "9B2726BB4A0A86EAFB23A39A3E072A14" 
+#define APPKEY "B460447FC9E89C6D5FE9CED088647935" 
 
 /* LR2 Command and Response Strings Maximum Size */
 #define RN2xx3_BUFFER_SIZE            255
     
 /* Port Designations */
 #define PORT_CNF    "10"
-#define PORT_UNCNF  "11"      
+#define PORT_UNCNF  "11"
+    
+typedef enum {
+    RN2903,
+    RN2483
+} RN2xx3_t;    
+    
+typedef enum  {
+  SINGLE_CHANNEL_EU,
+  TTN_EU,
+  TTN_US,
+  DEFAULT_EU
+} FREQ_PLAN_t;
     
     void RN2xx3_resp(void);
     void RN2xx3_resp2(void);
@@ -50,8 +61,7 @@ extern "C" {
     void RN2xx3_getHWEUI();
     void RN2xx3_init(void);
     void RN2xx3_save(void);
-    void RN2xx3_set_channel_range();
-    void RN2xx3_disable_unused_channels();
+    void RN2xx3_set_freq_plan(RN2xx3_t moduleType);
     void RN2xx3_config_OTAA(void);
     void RN2xx3_config_ABP(void);
     void RN2xx3_config_TTN(void);

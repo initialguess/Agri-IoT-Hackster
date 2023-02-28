@@ -27,7 +27,7 @@ CLEAN_SUBPROJECTS=${CLEAN_SUBPROJECTS_${SUBPROJECTS}}
 PROJECTNAME=agri-iot-hackster.X
 
 # Active Configuration
-DEFAULTCONF=pro
+DEFAULTCONF=free
 CONF=${DEFAULTCONF}
 
 # All Configurations
