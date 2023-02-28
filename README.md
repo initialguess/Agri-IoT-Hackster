@@ -12,7 +12,8 @@ This project began as a Capstone project at Arizona State University in partners
 ## Software Used
 - MPLAB® X IDE 6.0.0 or newer [(MPLAB X IDE 6.0)]()
 - MPLAB XC8 2.40.0 or newer compiler [(MPLAB XC8 2.40)]()
-- MPLAB Code Configurator (MCC) 5.1.9 or newer [(MPLAB Code Configurator)]()
+- MPLAB Code Configurator (MCC) 5.1.9 or newer [(
+https://www.microchip.com/en-us/tools-resources/configure/mplab-code-configurator?utm_source=Hackster&utm_medium=TextLink&utm_campaign=MCU8_MMTCha_avrdd&utm_content=agri-iot-dd-hackster)]()
 - MPLAB® Data Visualizer [(MPLAB Data Visualizer)](https://www.microchip.com/en-us/tools-resources/debug/mplab-data-visualizer)
 
 ## Hardware Used
