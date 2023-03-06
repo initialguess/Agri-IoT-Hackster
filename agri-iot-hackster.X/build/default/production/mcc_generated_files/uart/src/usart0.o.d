@@ -42,17 +42,13 @@ build/default/production/mcc_generated_files/uart/src/usart0.o.d \
  mcc_generated_files/uart/src/../../system/../timer/../system/utils/compiler.h \
  mcc_generated_files/uart/src/../../system/../timer/tcb0.h \
  mcc_generated_files/uart/src/../../system/../timer/./timer_interface.h \
- mcc_generated_files/uart/src/../../system/../timer/tcb1.h \
  mcc_generated_files/uart/src/../../system/../uart/usart0.h \
- mcc_generated_files/uart/src/../../system/../uart/usart1.h \
- mcc_generated_files/uart/src/../../system/../uart/../system/system.h \
- mcc_generated_files/uart/src/../../system/../uart/uart_drv_interface.h \
- mcc_generated_files/uart/src/../../system/../uart/uart_types.h \
  mcc_generated_files/uart/src/../../system/../vref/vref.h \
  mcc_generated_files/uart/src/../../system/../vref/../system/utils/compiler.h \
  mcc_generated_files/uart/src/../../system/../system/interrupt.h \
  mcc_generated_files/uart/src/../../system/../system/../system/utils/atomic.h \
- mcc_generated_files/uart/src/../uart_drv_interface.h
+ mcc_generated_files/uart/src/../uart_drv_interface.h \
+ mcc_generated_files/uart/src/../uart_types.h
 
 mcc_generated_files/uart/src/../usart0.h:
 
@@ -136,17 +132,7 @@ mcc_generated_files/uart/src/../../system/../timer/tcb0.h:
 
 mcc_generated_files/uart/src/../../system/../timer/./timer_interface.h:
 
-mcc_generated_files/uart/src/../../system/../timer/tcb1.h:
-
 mcc_generated_files/uart/src/../../system/../uart/usart0.h:
-
-mcc_generated_files/uart/src/../../system/../uart/usart1.h:
-
-mcc_generated_files/uart/src/../../system/../uart/../system/system.h:
-
-mcc_generated_files/uart/src/../../system/../uart/uart_drv_interface.h:
-
-mcc_generated_files/uart/src/../../system/../uart/uart_types.h:
 
 mcc_generated_files/uart/src/../../system/../vref/vref.h:
 
@@ -157,3 +143,5 @@ mcc_generated_files/uart/src/../../system/../system/interrupt.h:
 mcc_generated_files/uart/src/../../system/../system/../system/utils/atomic.h:
 
 mcc_generated_files/uart/src/../uart_drv_interface.h:
+
+mcc_generated_files/uart/src/../uart_types.h:

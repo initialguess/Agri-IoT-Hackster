@@ -39,13 +39,11 @@ build/default/production/bme280.o.d build/default/production/bme280.o: \
  mcc_generated_files/system/../timer/../system/utils/compiler.h \
  mcc_generated_files/system/../timer/tcb0.h \
  mcc_generated_files/system/../timer/./timer_interface.h \
- mcc_generated_files/system/../timer/tcb1.h \
  mcc_generated_files/system/../uart/usart0.h \
  c:\program\ files\microchip\xc8\v2.40\avr\avr\include\stdio.h \
  mcc_generated_files/system/../uart/../system/system.h \
  mcc_generated_files/system/../uart/uart_drv_interface.h \
  mcc_generated_files/system/../uart/uart_types.h \
- mcc_generated_files/system/../uart/usart1.h \
  mcc_generated_files/system/../vref/vref.h \
  mcc_generated_files/system/../vref/../system/utils/compiler.h \
  mcc_generated_files/system/../system/interrupt.h \
@@ -134,8 +132,6 @@ mcc_generated_files/system/../timer/tcb0.h:
 
 mcc_generated_files/system/../timer/./timer_interface.h:
 
-mcc_generated_files/system/../timer/tcb1.h:
-
 mcc_generated_files/system/../uart/usart0.h:
 
 c:\program\ files\microchip\xc8\v2.40\avr\avr\include\stdio.h:
@@ -145,8 +141,6 @@ mcc_generated_files/system/../uart/../system/system.h:
 mcc_generated_files/system/../uart/uart_drv_interface.h:
 
 mcc_generated_files/system/../uart/uart_types.h:
-
-mcc_generated_files/system/../uart/usart1.h:
 
 mcc_generated_files/system/../vref/vref.h:
 

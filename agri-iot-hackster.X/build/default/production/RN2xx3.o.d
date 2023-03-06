@@ -38,18 +38,16 @@ build/default/production/RN2xx3.o.d build/default/production/RN2xx3.o: \
  mcc_generated_files/system/../timer/../system/utils/compiler.h \
  mcc_generated_files/system/../timer/tcb0.h \
  mcc_generated_files/system/../timer/./timer_interface.h \
- mcc_generated_files/system/../timer/tcb1.h \
  mcc_generated_files/system/../uart/usart0.h \
  c:\program\ files\microchip\xc8\v2.40\avr\avr\include\stdio.h \
  mcc_generated_files/system/../uart/../system/system.h \
  mcc_generated_files/system/../uart/uart_drv_interface.h \
  mcc_generated_files/system/../uart/uart_types.h \
- mcc_generated_files/system/../uart/usart1.h \
  mcc_generated_files/system/../vref/vref.h \
  mcc_generated_files/system/../vref/../system/utils/compiler.h \
  mcc_generated_files/system/../system/interrupt.h \
  mcc_generated_files/system/../system/../system/utils/atomic.h RN2xx3.h \
- ringBuffer.h \
+ ringBuffer.h usart1.h usart1_utilities.h \
  c:\program\ files\microchip\xc8\v2.40\avr\avr\include\util\delay.h \
  c:\program\ files\microchip\xc8\v2.40\avr\avr\include\util\delay_basic.h \
  c:\program\ files\microchip\xc8\v2.40\avr\avr\include\math.h
@@ -132,8 +130,6 @@ mcc_generated_files/system/../timer/tcb0.h:
 
 mcc_generated_files/system/../timer/./timer_interface.h:
 
-mcc_generated_files/system/../timer/tcb1.h:
-
 mcc_generated_files/system/../uart/usart0.h:
 
 c:\program\ files\microchip\xc8\v2.40\avr\avr\include\stdio.h:
@@ -143,8 +139,6 @@ mcc_generated_files/system/../uart/../system/system.h:
 mcc_generated_files/system/../uart/uart_drv_interface.h:
 
 mcc_generated_files/system/../uart/uart_types.h:
-
-mcc_generated_files/system/../uart/usart1.h:
 
 mcc_generated_files/system/../vref/vref.h:
 
@@ -157,6 +151,10 @@ mcc_generated_files/system/../system/../system/utils/atomic.h:
 RN2xx3.h:
 
 ringBuffer.h:
+
+usart1.h:
+
+usart1_utilities.h:
 
 c:\program\ files\microchip\xc8\v2.40\avr\avr\include\util\delay.h:
 

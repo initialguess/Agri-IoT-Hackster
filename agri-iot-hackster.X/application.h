@@ -39,6 +39,7 @@ extern "C" {
 #include <stdbool.h>
 #include <stdio.h>
 #include <stdint.h>
+#include "usart1.h"    
 #include "bme280.h"
 #include "TWI.h"    
 #include "RN2xx3.h"
@@ -50,9 +51,9 @@ extern "C" {
 // TODO Insert C++ class definitions if appropriate
 
 // Moisture     
-#define CONVERSION_PERCENT 0.06253   // 100 / (IN_MAX - IN_MIN)
-#define IN_MAX 3400          
-#define IN_MIN 1800
+#define CONVERSION_PERCENT 0.0625   // 100 / (IN_MAX - IN_MIN)
+#define IN_MAX 3000          
+#define IN_MIN 1400
     
 // defines for Soil Moisure LUT
 #define LUT_TABLESIZE 42    // number of elements in lookup table (in pairs of ADC read and %)
@@ -73,6 +74,7 @@ extern "C" {
 #define READ_INTERVAL 180;  //Time between sensor readings
 
 typedef enum    {
+    REGISTER,
     INIT,
     TTN_NOT_JOINED,
     TTN_JOIN,       
@@ -86,6 +88,11 @@ typedef enum    {
     TEST_SENSOR_VALUES,
     WAIT_FOR_TEST
 } STATE;
+
+typedef struct {
+    uint16_t min;
+    uint16_t max;
+} moist_range_t;
 
 typedef struct
 {
@@ -106,10 +113,8 @@ typedef struct {
 } soil_moist_t;
 
 // Function Prototypes
-void TIMER_ms(void);
 void BUTTON_debounce(void);
 void RTC_PIT_Callback(void);
-void soilPulse(void);
 void WeatherClick_initialize(void);
 void WeatherClick_readSensors(void);
 void printRawValue(void);

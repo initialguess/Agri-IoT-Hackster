@@ -4,12 +4,11 @@
     <configuration>
         <data xmlns="http://www.netbeans.org/ns/make-project/1">
             <name>agri-iot-hackster</name>
-            <name>agri-iot-hackster</name>
-            <name>agri-iot-hackster-otaa</name>
+            <name>avr64dd32-agri-iot-hackster</name>
             <name>avr64dd32-agri-iot-hackster</name>
             <name>avr64dd32-agri-iot</name>
-            <name>avr64dd32_uart_button</name>
-            <creation-uuid>9ab1caeb-64fb-4d2b-bb12-844b8608e540</creation-uuid>
+            <name>avr64dd32-rn2xx3</name>
+            <creation-uuid>c4a23311-ee50-4ca6-826b-ffc61ad5ca99</creation-uuid>
             <make-project-type>0</make-project-type>
             <c-extensions>c</c-extensions>
             <cpp-extensions/>
@@ -20,11 +19,7 @@
             <sourceRootList/>
             <confList>
                 <confElem>
-                    <name>free</name>
-                    <type>2</type>
-                </confElem>
-                <confElem>
-                    <name>pro</name>
+                    <name>default</name>
                     <type>2</type>
                 </confElem>
             </confList>
@@ -32,5 +27,8 @@
                 <project-formatting-style>false</project-formatting-style>
             </formatting>
         </data>
+        <spellchecker-wordlist xmlns="http://www.netbeans.org/ns/spellchecker-wordlist/1">
+            <word>datarate</word>
+        </spellchecker-wordlist>
     </configuration>
 </project>

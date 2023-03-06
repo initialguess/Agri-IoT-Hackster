@@ -1,6 +1,7 @@
 build/default/production/main.o.d build/default/production/main.o: main.c \
- mcc_generated_files/system/system.h \
- mcc_generated_files/system/../system/utils/compiler.h \
+ application.h \
+ c:\program\ files\microchip\xc8\v2.40\avr\lib\gcc\avr\5.4.0\include\xc.h \
+ c:\program\ files\microchip\xc8\v2.40\avr\lib\gcc\avr\5.4.0\include\cci.h \
  c:\program\ files\microchip\xc8\v2.40\avr\avr\include\avr\io.h \
  c:\program\ files\microchip\xc8\v2.40\avr\avr\include\avr\sfr_defs.h \
  c:\program\ files\microchip\xc8\v2.40\avr\avr\include\inttypes.h \
@@ -15,14 +16,15 @@ build/default/production/main.o.d build/default/production/main.o: main.c \
  c:\program\ files\microchip\xc8\v2.40\avr\avr\include\avr\xmega.h \
  c:\program\ files\microchip\xc8\v2.40\avr\avr\include\avr\fuse.h \
  c:\program\ files\microchip\xc8\v2.40\avr\avr\include\avr\lock.h \
- c:\program\ files\microchip\xc8\v2.40\avr\avr\include\avr\builtins.h \
- c:\program\ files\microchip\xc8\v2.40\avr\lib\gcc\avr\5.4.0\include\xc.h \
- c:\program\ files\microchip\xc8\v2.40\avr\lib\gcc\avr\5.4.0\include\cci.h \
+ c:\program\ files\microchip\xc8\v2.40\avr\avr\include\avr\interrupt.h \
  c:\program\ files\microchip\xc8\v2.40\avr\lib\gcc\avr\5.4.0\include\stdbool.h \
+ c:\program\ files\microchip\xc8\v2.40\avr\avr\include\stdio.h usart1.h \
+ bme280.h mcc_generated_files/system/system.h \
+ mcc_generated_files/system/../system/utils/compiler.h \
+ c:\program\ files\microchip\xc8\v2.40\avr\avr\include\avr\builtins.h \
  c:\program\ files\microchip\xc8\v2.40\avr\lib\gcc\avr\5.4.0\include\stddef.h \
  c:\program\ files\microchip\xc8\v2.40\avr\avr\include\stdlib.h \
  mcc_generated_files/system/../system/utils/interrupt_avr8.h \
- c:\program\ files\microchip\xc8\v2.40\avr\avr\include\avr\interrupt.h \
  mcc_generated_files/system/../system/clock.h \
  mcc_generated_files/system/../system/ccp.h \
  mcc_generated_files/system/../system/../system/utils/compiler.h \
@@ -38,26 +40,21 @@ build/default/production/main.o.d build/default/production/main.o: main.c \
  mcc_generated_files/system/../timer/../system/utils/compiler.h \
  mcc_generated_files/system/../timer/tcb0.h \
  mcc_generated_files/system/../timer/./timer_interface.h \
- mcc_generated_files/system/../timer/tcb1.h \
  mcc_generated_files/system/../uart/usart0.h \
- c:\program\ files\microchip\xc8\v2.40\avr\avr\include\stdio.h \
  mcc_generated_files/system/../uart/../system/system.h \
  mcc_generated_files/system/../uart/uart_drv_interface.h \
  mcc_generated_files/system/../uart/uart_types.h \
- mcc_generated_files/system/../uart/usart1.h \
  mcc_generated_files/system/../vref/vref.h \
  mcc_generated_files/system/../vref/../system/utils/compiler.h \
  mcc_generated_files/system/../system/interrupt.h \
- mcc_generated_files/system/../system/../system/utils/atomic.h \
- application.h bme280.h TWI.h RN2xx3.h ringBuffer.h \
- c:\program\ files\microchip\xc8\v2.40\avr\avr\include\avr\sleep.h \
- c:\program\ files\microchip\xc8\v2.40\avr\avr\include\util\delay.h \
- c:\program\ files\microchip\xc8\v2.40\avr\avr\include\util\delay_basic.h \
- c:\program\ files\microchip\xc8\v2.40\avr\avr\include\math.h
+ mcc_generated_files/system/../system/../system/utils/atomic.h TWI.h \
+ RN2xx3.h ringBuffer.h
 
-mcc_generated_files/system/system.h:
+application.h:
 
-mcc_generated_files/system/../system/utils/compiler.h:
+c:\program\ files\microchip\xc8\v2.40\avr\lib\gcc\avr\5.4.0\include\xc.h:
+
+c:\program\ files\microchip\xc8\v2.40\avr\lib\gcc\avr\5.4.0\include\cci.h:
 
 c:\program\ files\microchip\xc8\v2.40\avr\avr\include\avr\io.h:
 
@@ -87,21 +84,27 @@ c:\program\ files\microchip\xc8\v2.40\avr\avr\include\avr\fuse.h:
 
 c:\program\ files\microchip\xc8\v2.40\avr\avr\include\avr\lock.h:
 
-c:\program\ files\microchip\xc8\v2.40\avr\avr\include\avr\builtins.h:
-
-c:\program\ files\microchip\xc8\v2.40\avr\lib\gcc\avr\5.4.0\include\xc.h:
-
-c:\program\ files\microchip\xc8\v2.40\avr\lib\gcc\avr\5.4.0\include\cci.h:
+c:\program\ files\microchip\xc8\v2.40\avr\avr\include\avr\interrupt.h:
 
 c:\program\ files\microchip\xc8\v2.40\avr\lib\gcc\avr\5.4.0\include\stdbool.h:
+
+c:\program\ files\microchip\xc8\v2.40\avr\avr\include\stdio.h:
+
+usart1.h:
+
+bme280.h:
+
+mcc_generated_files/system/system.h:
+
+mcc_generated_files/system/../system/utils/compiler.h:
+
+c:\program\ files\microchip\xc8\v2.40\avr\avr\include\avr\builtins.h:
 
 c:\program\ files\microchip\xc8\v2.40\avr\lib\gcc\avr\5.4.0\include\stddef.h:
 
 c:\program\ files\microchip\xc8\v2.40\avr\avr\include\stdlib.h:
 
 mcc_generated_files/system/../system/utils/interrupt_avr8.h:
-
-c:\program\ files\microchip\xc8\v2.40\avr\avr\include\avr\interrupt.h:
 
 mcc_generated_files/system/../system/clock.h:
 
@@ -133,19 +136,13 @@ mcc_generated_files/system/../timer/tcb0.h:
 
 mcc_generated_files/system/../timer/./timer_interface.h:
 
-mcc_generated_files/system/../timer/tcb1.h:
-
 mcc_generated_files/system/../uart/usart0.h:
-
-c:\program\ files\microchip\xc8\v2.40\avr\avr\include\stdio.h:
 
 mcc_generated_files/system/../uart/../system/system.h:
 
 mcc_generated_files/system/../uart/uart_drv_interface.h:
 
 mcc_generated_files/system/../uart/uart_types.h:
-
-mcc_generated_files/system/../uart/usart1.h:
 
 mcc_generated_files/system/../vref/vref.h:
 
@@ -155,20 +152,8 @@ mcc_generated_files/system/../system/interrupt.h:
 
 mcc_generated_files/system/../system/../system/utils/atomic.h:
 
-application.h:
-
-bme280.h:
-
 TWI.h:
 
 RN2xx3.h:
 
 ringBuffer.h:
-
-c:\program\ files\microchip\xc8\v2.40\avr\avr\include\avr\sleep.h:
-
-c:\program\ files\microchip\xc8\v2.40\avr\avr\include\util\delay.h:
-
-c:\program\ files\microchip\xc8\v2.40\avr\avr\include\util\delay_basic.h:
-
-c:\program\ files\microchip\xc8\v2.40\avr\avr\include\math.h:

@@ -1,17 +1,17 @@
 <?xml version="1.0" encoding="UTF-8"?> 
 <project>                                  
-  <executable name="dist/default/production/agri-iot-hackster.X.production.elf">                 
+  <executable name="dist/default/production/avr64dd32-agri-iot.X.production.elf">                 
     <memory name="program">              
       <units>bytes</units>                 
       <length>65536</length>                 
-      <used>20235</used>                     
-      <free>45301</free>                     
+      <used>23248</used>                     
+      <free>42288</free>                     
     </memory>                              
     <memory name="data">                 
       <units>bytes</units>                 
       <length>8192</length>                 
-      <used>732</used>                     
-      <free>7460</free>                     
+      <used>740</used>                     
+      <free>7452</free>                     
     </memory>                              
   </executable>                            
 </project>                                 

@@ -3,39 +3,30 @@
 #include <util/delay.h>
 #include "bme280.h"
 /**
-  Section: Variable Definitions
+ * Section: Variable Definitions
  */
-volatile uint32_t millis = 0;   // counter for elapsed milliseconds (soil pulse)
-volatile uint32_t last_millis = 0;
-volatile uint32_t secs = 0;     // counter for elapsed seconds (sleep timer)
-volatile uint32_t lastsecs = 0; // reference to determine total elapsed time in sec
-volatile uint32_t soilSecs = 0;
 
-/* LR2 payload for TTN - String of hex characters representing sensor data */
+/* Counter for elapsed seconds (sleep timer) */
+volatile uint32_t secs = 0;
+
+/* RN2xx3 payload for TTN - String of hex characters representing sensor data */
 char payload[11];
-
-/* Moisture */
-static soil_moist_t soil;
 
 /* Data structure: measurements from Weather Click and moisture sensor */
 static sensor_data_t data;
 
+/* Structure for soil measurements */
+static moist_range_t soil;
+
 /* Event Flags for User Interface */
 static volatile uint16_t event_flags = 0;
 
-/* State Machine Initial State: Change to test functionality, i.e. TEST_LORA,
- * otherwise define as INIT for normal operations */
+/* State Machine Initial State: Change to test functionality, i.e. TEST_LORA.
+ * Use INIT for normal operations */
 static STATE state = INIT;
 
 /* Keep track of the number of transmissions */
-static volatile uint8_t numTx = 0;
-
-
-struct {
-    uint16_t min;
-    uint16_t max;
-} moist_range_t;
-
+static volatile uint32_t numTx = 0;
 
 /**
   Section: Driver APIs
@@ -45,29 +36,12 @@ void BUTTON_debounce(void) {
     if(PORTF.IN & PIN6_bm) {
         // Turn off LED (Active Low))
         LED_SetHigh();
-        // 
         event_flags |= UI_BUTTON_FLAG;
-        event_flags &= ~SLEEP_TIMER_FLAG;
-        
     }
     else
         LED_SetLow();
 }
 
-/* Millisecond Timer For Soil Moisture Measurement */
-void TIMER_ms(void) {
-    millis++;
-}
-
-/* 1 sec delay for soil pulse */
-void soilPulse(void) {
-    static uint32_t loop_cnt = 0;
-    loop_cnt++;
-    soilSecs = ((millis - last_millis) / 1000UL); 
-    if(soilSecs - lastsecs >= 2UL) {
-        last_millis = millis;    
-    }
-}
 /*
  * Wakes the MCU
  */
@@ -78,7 +52,6 @@ void RTC_PIT_Callback(void) {
 /* Prints a single raw soil moisture measurement */
 void printRawValue() {
     uint16_t val;
-    
     val = ADC0_GetConversion(ADC_MUXPOS_AIN2_gc);
     printf("%d\n", val);
 }
@@ -158,13 +131,13 @@ void getSensorData(sensor_data_t *data)
  */
 void printSensorData(sensor_data_t *data)
 {
-    USART0_sendStr("\n\nCurrent Sensor Data\n");
-    USART0_sendStr("-----------------------------------------------------------------------\n");
+    printf("\n\nCurrent Sensor Data\n");
+    printf("-----------------------------------------------------------------------\n");
     
     printf("Relative Humidity: %u%% \r\n", data->humid);
-    printf("Moisture: %u%% \r\n", data->moist);
-    printf("Pressure: %u hPa\r\n", data->press * 10);
-    printf("Temperature: %i C \r\n", data->temp);
+    printf("         Moisture: %u%% \r\n", data->moist);
+    printf("         Pressure: %u hPa\r\n", data->press * 10);
+    printf("      Temperature: %i C \r\n", data->temp);
     printf("\nJSON Format\r\n");
     printf("-----------------------------------------------------------------------\n");
     printf("Payload: { temp: %i, humidity: %u, moisture: %u, pressure: %u }\r\n\n", 
@@ -195,8 +168,8 @@ void formatPayload(char *str, sensor_data_t *data) {
     str[8] = '\r';
     str[9] = '\n';
     str[10] = '\0';
-    
-    printf("Payload string: %s\nnumTx: %d\n", str, numTx);
+
+    printf("Payload hex string: %snumTx: %lu\n", str, numTx);
 }
 
 void stateMachine()
@@ -204,20 +177,19 @@ void stateMachine()
     //Handle User Button Presses
     if(event_flags & UI_BUTTON_FLAG) {
         switch(state) {
-
+            
             case TTN_NOT_JOINED:
                 LED_SetHigh();
                 state = TTN_JOIN;
                 break;
             
-                /* If a button press occurs during sleep, wake up and send a cnf tx */    
+            /* TODO: Implement routine to wake RN2xx3 from sleep
+             * If a button press occurs during sleep, wake up and send a uncnf tx */    
             case SLEEP:
-                state = TX_CNF;
-                RTC_Stop();
                 break;
 
             case WAIT_FOR_TEST:
-                state = TX_CNF;
+                printRawValue();
                 break;
 
             default:
@@ -227,12 +199,33 @@ void stateMachine()
     }
 
     switch(state)   {
+        case REGISTER:
+            /* Gather necessary details to register on TTN */
+
+            /* Initialize the LoRa Module */
+            RN2xx3_init();
+            
+            /* Print the HWEUI to register with TTN */
+            RN2xx3_getHWEUI();
+            
+            printf("\r\nUse these details to register your device and generate keys with TTN\r\n");
+            
+            /* Clear the Event_Flags */
+            event_flags = 0;
+            
+            state = TTN_NOT_JOINED;
+            break;
+            
         case INIT:
+            event_flags &= ~UI_BUTTON_FLAG;
             /* Turn off LED begin initialization processes */
             LED_SetHigh();
 
             /* Initialize the LoRa Module */
             RN2xx3_init();
+            
+            /* Print the HWEUI to register with TTN */
+            RN2xx3_getHWEUI();
 
             /* Initialize the Weather Click */                     
             if(!BME280_init())
@@ -241,11 +234,12 @@ void stateMachine()
             }   
             /* Turn on LED to indicate initialization complete */ 
             LED_SetLow();
+            
+            printf("\nPress button to join TTN.\n");
+            
+            /* Clear the Event_Flags */
+            event_flags = 0;
 
-            /* Prompt to use interactive terminal or join TTN */
-            printf("\nInteractive Terminal is active: commands such as \'sys factoryRESET\' will\n");
-            printf("be sent to the RN2xx3 and responses will be appear here.\n");
-            printf("\nWhen ready, press button to join TTN\n\n");
             state = TTN_NOT_JOINED;  
             break;
 
@@ -256,35 +250,53 @@ void stateMachine()
             break;
 
         case TTN_JOIN:
+            /* Configure RN2xx3 with keys and settings */
             RN2xx3_config_TTN();
-            RN2xx3_join_TTN();
-#ifdef ABP
-            state = TX_CNF;
-#endif
             
-#ifdef OTAA
-            state = TX_CNF;
-#endif
+            /* Attempt to Join TTN */
+            if(!RN2xx3_join_TTN())   {
+                /* There was a problem joining TTN, do not attempt to transmit */
+                printf("Entering interactive terminal to troubleshoot.\r\n");
+                state = TTN_NOT_JOINED;        
+            }
+            /* Join successful so transmit initial confirmed packet */
+            else {
+                state = TX_CNF;
+            }
             break;
 
         case TX_CNF:
             numTx++;
+            /* Turn on LED to indicate begin tx*/
             LED_SetLow();
+            
             /* Gather and format sensor data for transmission */
             getSensorData(&data);
+            printSensorData(&data);
             formatPayload(payload, &data);
             RN2xx3_tx_cnf(payload);
+            /* Wait 6 seconds to leave RX2 window open before putting to sleep */
+            _delay_ms(6000);
+            
+            /* Put RN2xx3 to sleep, make sure the interval (in ms) is less than
+             * the Tx interval (TX_INTERVAL_SEC) which is in seconds.
+             * When RN2xx3  wakes up, either an 'ok' will appear in the rxBuffer
+             * or 'invalid_param' when improperly formatted or too long */
+            RN2xx3_cmd("sys sleep 90000\r\n");
+            
+            /* Start the PIT in preparation for MCU sleep */
             RTC_Start();
-           //RN2xx3_sleep(160000);
             state = SLEEP;
             LED_SetHigh();
             break;
 
         case SLEEP:
-            if(secs == 180) {
+            if(secs == TX_INTERVAL_SEC) {
                 //event_flags &= ~SLEEP_TIMER_FLAG;
-                /* Twice per day send cnf Payload */
-                if(numTx % 240 == 0) {
+                
+                /* Twice per day send confirmed packet (TX_CNF), otherwise send 
+                 * packets unconfirmed (TX_UNCNF) */
+                if(numTx % 480 == 0) {
                     state = TX_CNF;
                 }
                 else {
@@ -292,11 +304,9 @@ void stateMachine()
                 }
                 RTC_Stop();
                 secs = 0;
-                /* When the RN2xx3 wakes up, it sends an ok or invalid_param */
-                //RN2xx3_resp();
             }
-            /* Will later remove this when putting RN2xx3 to sleep. for now the 
-             * the interactive terminal is active during sleep for testing purposes. */
+            /* The interactive terminal is active during SLEEP for testing purposes.
+             * Replace it later with MCU sleep command */
             RN2xx3_interface();
             break;
 
@@ -304,20 +314,29 @@ void stateMachine()
             numTx++;
             LED_SetHigh();
             getSensorData(&data);
+            printSensorData(&data);
             formatPayload(payload, &data);
             RN2xx3_tx_uncnf(payload);
+            /* Wait 6 seconds to leave RX2 window open before putting to sleep */
+            _delay_ms(6000);
+            
+            /* Put RN2xx3 to sleep, make sure the interval (in ms) is less than
+             * the Tx interval (TX_INTERVAL_SEC) which is in seconds.
+             * When RN2xx3  wakes up, either an 'ok' will appear in the rxBuffer
+             * or 'invalid_param' when improperly formatted or too long */
+            RN2xx3_cmd("sys sleep 90000\r\n");
+            
+            /* Start the PIT in preparation for MCU sleep */
             RTC_Start();
             state = SLEEP;
             LED_SetHigh();
             break;
 
         case TEST_MOISTURE:
-            secs = 0;
-            printRawValue();;
-            
-            /* Start the PIT and wait 1 minute */
-            RTC_Start();
+            printf("Pressing the button will print an ADC value.\n");
+            printf("\nSample in dry air first, then sample in a cup of water.\n\n");
             state = WAIT_FOR_TEST;
+            
             break;
             
         case TEST_LORA:
@@ -325,9 +344,10 @@ void stateMachine()
             break;
 
         case TEST_BME280:
-            //Initialize Weather Click
+            /* Initialize Weather Click */
             BME280_init();
-            //Gather and format sensor data for transmission
+            
+            /* Gather and format sensor data for transmission*/
             getSensorData(&data);
             printSensorData(&data);
             formatPayload(payload, &data);
@@ -346,11 +366,6 @@ void stateMachine()
             break;
 
         case WAIT_FOR_TEST:
-            if (secs == 2) {
-                RTC_Stop();
-                state = TEST_MOISTURE;
-            }
-            RN2xx3_interface();
             break;
             
         default:

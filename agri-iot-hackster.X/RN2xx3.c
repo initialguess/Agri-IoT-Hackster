@@ -1,160 +1,128 @@
 #include "mcc_generated_files/system/system.h"
 #include "RN2xx3.h"
 #include "ringBuffer.h"
+#include "usart1.h"
+#include "usart1_utilities.h"
 #include <util/delay.h>
 
+//Size of Ring Buffer
+#define RN2xx3_BUFFER_SIZE 255
+#define HWEUI_SIZE 17
+#define VERSION_SIZE 34
+#define STATUS_SIZE 17
 
-/* Memory for Ring Buffer */
-static char rx_text[RN2xx3_BUFFER_SIZE];
-static char tx_text[RN2xx3_BUFFER_SIZE];
+//Memory for Ring Buffer
+static char cmdBuffer[RN2xx3_BUFFER_SIZE];
+static char rcvBuffer[RN2xx3_BUFFER_SIZE];
 
 /* Ring Buffer Structures */
-ring_buffer_t tx_buffer;
-ring_buffer_t rx_buffer;
-//buffers_t buffers;
+static RingBuffer txBuffer;
+static RingBuffer rxBuffer;
 
-void RN2xx3_resp()
+/* Module Type */
+RN2xx3_t modType;
+
+/* Static Character Buffers  */
+static char hweui[HWEUI_SIZE];
+static char ver[VERSION_SIZE];
+static char status[STATUS_SIZE];
+
+/* Function to Load Data Into Ring Buffer */
+void loadCharacterToBuffer(char c)
 {
-    uint8_t recv = 0;
-    
-    USART0_sendStr("Rx: ");
-    while(recv != 1)
-    {
-        if(UART1__IsRxReady()) {
-            ringBuffer_push(&rx_buffer, UART1_Read());
-        }
-
-        if(ringBuffer_count(&rx_buffer) && UART0_IsTxReady()) {
-            char rx = ringBuffer_pop(&rx_buffer);
-            USART0_sendByte(rx);
-            if(rx == '\n') {
-                recv++;
-            }  
-        }
-    }
-    USART0_sendByte('\n');
-    _delay_ms(100);   
-}
-
-void RN2xx3_resp2()
-{
-    char rx;
-    uint8_t recv = 0;
-    
-    USART0_sendStr("Rx: ");
-    while(recv != 2)
-    {
-        if(UART1__IsRxReady()) {
-            ringBuffer_push(&rx_buffer, UART1_Read());
-        }
-
-        if(ringBuffer_count(&rx_buffer) && UART0_IsTxReady()) {
-            rx = ringBuffer_pop(&rx_buffer);
-            USART0_sendByte(rx);
-            if(rx == '\n') {
-                recv++;
-                if(recv == 1) {
-                    USART0_sendStr("Rx: ");
-                }
-            }  
-        }
-    }
-        USART0_sendByte('\n');
-    _delay_ms(500);
-}
-
-void RN2xx3_getHWEUI() {
-    uint8_t done = 0;
-    
-    USART0_sendStr("HWEUI: ");
-    ringBuffer_pushStr(&tx_buffer, "sys get hweui\r\n");
-    //Transmit over the RN2xx3 UART
-    while(ringBuffer_count(&tx_buffer))
-    {
-        if (UART1_IsTxReady())
-        {
-            UART1_Write(ringBuffer_pop(&tx_buffer));
-        }
-    }
-    
-    while(!done)
-    {
-        if(UART1__IsRxReady()) {
-            ringBuffer_push(&rx_buffer, UART1_Read());
-        }
-
-        if(ringBuffer_count(&rx_buffer) && UART0_IsTxReady()) {
-            char rx = ringBuffer_pop(&rx_buffer);
-            if(rx == '\n') {
-                done = 1;
-            }
-            USART0_sendByte(rx);
-        }
-    }
-    _delay_ms(100); 
+    ringBuffer_loadCharacter(&rxBuffer, c);
 }
 
 void RN2xx3_cmd(const char *str)
 {
-    //Print Command to the Terminal for Debug Purposes
-    USART0_sendStr("\r\nTx: ");
-    USART0_sendStr(str);
-  
-    //Add the command string to the RN2xx3 txBuffer
-    ringBuffer_pushStr(&tx_buffer, str);
-    
-    //Transmit over the RN2xx3 UART
-    for (uint8_t i = 0; str[i] != '\0'; )
-    {
-        if (ringBuffer_count(&tx_buffer) && UART1_IsTxReady())
-        {
-            UART1_Write(ringBuffer_pop(&tx_buffer));
-            i++;
-        }
-    }
+    USART1_sendString(str);
     _delay_ms(100);
-    RN2xx3_resp();
+#ifdef DEBUG
+    printf("%s\r\n", str);
+#endif
+}
+
+void RN2xx3_getHWEUI() 
+{
+    ringBuffer_advanceToString(&rxBuffer, "\r\n");
+    //ringBuffer_flushReadBuffer(&rxBuffer);
+    RN2xx3_cmd("sys get hweui\r\n");
+    _delay_ms(200);
+    ringBuffer_copyBuffer(&rxBuffer, &hweui[0], HWEUI_SIZE);
+    printf("      HWEUI: %s\r\n", hweui);
+    ringBuffer_advanceToString(&rxBuffer, "\r\n");
+}
+
+void RN2xx3_sys_RESET()
+{
+    ringBuffer_flushReadBuffer(&rxBuffer);
+    RN2xx3_cmd("sys factoryRESET\r\n");
+    _delay_ms(5000);
+    ringBuffer_copyBuffer(&rxBuffer, &ver[0], VERSION_SIZE);
+    printf("Firmware version: %s\r\n", ver);
+}
+
+void RN2xx3_mac_reset()
+{
+    RN2xx3_cmd("mac reset\r\n");
+    _delay_ms(50);
+}
+
+void RN2xx3_mac_get_status()
+{
+    ringBuffer_flushReadBuffer(&rxBuffer);
+    RN2xx3_cmd("mac get status\r\n");
+    ringBuffer_copyBuffer(&rxBuffer, &status[0], STATUS_SIZE);
+    printf("Mac status: %s\r\n", status);
+    _delay_ms(500);
 }
 
 void RN2xx3_init()
 {
-    printf("\nInitializing RN2xx3...\nFirmware: ");
+    printf("\nInitializing RN2xx3...\r\n");
     uint8_t done = 0;
     
-    ringBuffer_init(&tx_buffer, &tx_text[0], RN2xx3_BUFFER_SIZE);
-    ringBuffer_init(&rx_buffer, &rx_text[0], RN2xx3_BUFFER_SIZE);
+    //Initialize Ring Buffers
+    ringBuffer_createBuffer(&txBuffer, &cmdBuffer[0], RN2xx3_BUFFER_SIZE);
+    ringBuffer_createBuffer(&rxBuffer, &rcvBuffer[0], RN2xx3_BUFFER_SIZE);
         
     //Reset the RN2xx3
-    LoRa_RESET_SetLow();
+    RN2xx3_RESET_SetLow();
     _delay_ms(300);
-    LoRa_RESET_SetHigh();
+    RN2xx3_RESET_SetHigh();
     _delay_ms(100);         
-    LoRa_RTS_SetHigh();
+    RN2xx3_RTS_SetHigh();
+    _delay_ms(500);
 
     while(!done)
     {
-        if(UART1__IsRxReady()) {
-            ringBuffer_push(&rx_buffer, UART1_Read());
-        }
-
-        if(ringBuffer_count(&rx_buffer) && UART0_IsTxReady()) {
-            char rx = ringBuffer_pop(&rx_buffer);
-            USART0_sendByte(rx);
-            if(rx == '\n') {
-                done++;
-            }  
+        //Look for the Deliminator
+        if (ringBuffer_find(&rxBuffer, "\r"))
+        {
+            if (ringBuffer_find(&rxBuffer, "RN2903 1.0.3"))
+            {
+                printf("\r\nModule Type: RN2903\r\n");
+                printf("   Observes: LoRaWAN spec 1.0.0\r\n");
+                modType = RN2903; 
+                done = 1;
+            }
+            else if (ringBuffer_find(&rxBuffer, "RN2483 1.0.5"))
+            {
+                printf("\r\nModule Type: RN2483\r\n");
+                printf("   Observes: LoRaWAN spec 1.0.2\r\n");
+                modType = RN2483;
+                done = 1;
+            }
         }
     }
-    USART0_sendByte('\n');
-    _delay_ms(100);
-    
-    RN2xx3_getHWEUI();
+    //Advance the buffer to the newline character
+    ringBuffer_advanceToString(&rxBuffer, "\r\n");
 }
 
 void RN2xx3_save(void)
 {
     RN2xx3_cmd("mac save\r\n");
-    _delay_ms(100);
+    _delay_ms(1000);
 }
 
 /* The RN2xx3 firmware is designed to match the LoRaWAN? specification. The 
@@ -167,10 +135,10 @@ void RN2xx3_save(void)
  * channel that the gateway is not listening to. Seven packets will be dropped 
  * and only one will pass through. This can be easily corrected by using the 
  * mac set ch status in a loop to disable all the unused channels*/
-void RN2xx3_set_freq_plan(RN2xx3_t moduleType) {
+void RN2xx3_set_freq_plan() {
     char str[32];
     
-    switch(moduleType)
+    switch(modType)
     {
         case RN2483:
             /* Set Rx2 Window */
@@ -238,26 +206,19 @@ void RN2xx3_set_freq_plan(RN2xx3_t moduleType) {
 
 }
 
-
-
 void RN2xx3_config_ABP() 
 {
-    USART0_sendStr("\n\nConfiguring RN2xx3 For ABP join\n");
-    USART0_sendStr("-----------------------------------------------------------------------\n");
+    printf("\n\nConfiguring RN2xx3 For ABP join...\n");
     RN2xx3_cmd("mac set deveui " DEVEUI "\r\n");
     RN2xx3_cmd("mac set devaddr " DEVADDR "\r\n");
     RN2xx3_cmd("mac set appskey " APPSKEY "\r\n");
     RN2xx3_cmd("mac set nwkskey " NWKSKEY "\r\n");
     RN2xx3_cmd("mac set ar on\r\n");
-    RN2xx3_cmd("mac set rxdelay1 5000\r\n");
+    RN2xx3_cmd("mac set rxdelay1 " RX1_DELAY "\r\n");
     RN2xx3_cmd("mac set rx2 12 923300000\r\n");
     RN2xx3_cmd("mac set adr on\r\n");
-    //RN2xx3_set_channel_range();
-    RN2xx3_set_freq_plan(RN2903);
-    RN2xx3_cmd("mac set dr 4\r\n");
-    RN2xx3_cmd("mac save\r\n");
-    USART0_sendStr("\n");
-    _delay_ms(100);
+    RN2xx3_set_freq_plan();
+    RN2xx3_save();
     
 }
 /* Only DEVEUI, APPKEY, and APPEUI are necessary for OTAA, but DEVADDR, APPSKEY,
@@ -266,12 +227,11 @@ void RN2xx3_config_ABP()
  */
 void RN2xx3_config_OTAA()
 {
-    USART0_sendStr("\n\nConfiguring RN2xx3 For OTAA join\n");
-    USART0_sendStr("-----------------------------------------------------------------------\n");
+    /* Add a mac reset if you plan to power cycle between joins, remove if not 
+     * additionally you may need to reset the mac on the TTN side */
+    RN2xx3_cmd("mac reset\r\n");
     
-    /* Temporarily pause the LoRaWAN stack to configure radio as OTAA join only
-     * works with spreading factors below sf12 in US
-     */
+    printf("\r\nConfiguring for OTAA join (expect ~10 sec to set channel frequency plan)...\n");
     RN2xx3_cmd("mac pause\r\n");
     RN2xx3_cmd("mac resume\r\n");  
     RN2xx3_cmd("mac set deveui " HWEUI "\r\n");
@@ -281,18 +241,20 @@ void RN2xx3_config_OTAA()
     RN2xx3_cmd("mac set appkey " APPKEY "\r\n");
     RN2xx3_cmd("mac set appeui " APPEUI "\r\n");
     RN2xx3_cmd("mac set ar on\r\n");
-    RN2xx3_cmd("mac set rxdelay1 5000\r\n");
-    RN2xx3_cmd("mac set rx2 8 923300000\r\n");
+    RN2xx3_cmd("mac set rxdelay1 " RX1_DELAY "\r\n");
+    
+    /* Needed to change to 13 (SF7/500 kHz) when ~50 m away, when gateway is
+     * over 200m use default 8 (SF12/ 500 kHz other wise strength of accept 
+     * message causes bleed into other channels and RN2xx3 will ignore and
+     * output denied on Rx */
+    RN2xx3_cmd("mac set rx2 12 923300000\r\n");
     RN2xx3_cmd("mac set adr on\r\n");
-    RN2xx3_set_freq_plan(RN2903);
-    //RN2xx3_cmd("mac set dr 3\r\n");
-    RN2xx3_cmd("mac save\r\n");
-    USART0_sendStr("\n");
-    _delay_ms(100);  
+    RN2xx3_set_freq_plan();
+    RN2xx3_save(); 
 }
 
 void RN2xx3_config_TTN(void)
-{
+{   
 #ifdef OTAA
     RN2xx3_config_OTAA();
 #endif
@@ -301,189 +263,339 @@ void RN2xx3_config_TTN(void)
     RN2xx3_config_ABP();
 #endif
 }
-void RN2xx3_join_OTAA() 
-{
-    USART0_sendStr("\n\nJoining TTN with OTAA\n");
-    USART0_sendStr("-----------------------------------------------------------------------\n");
 
-    //For debug purposes, prints the command on the terminal
-    USART0_sendStr("Tx: mac join otaa\n");
+bool RN2xx3_join_OTAA() 
+{
+    bool response = false;
+    bool accepted = false;
+    ringBuffer_flushReadBuffer(&rxBuffer);
+    printf("\nAttempting to join TTN over OTAA...\n");
     
-    //Add the command string to the RN2xx3 txBuffer
-    ringBuffer_pushStr(&tx_buffer, "mac join otaa\r\n");
-       
-    //Transmit join request over the RN2xx3 UART
-    while(ringBuffer_count(&tx_buffer))
+    RN2xx3_cmd("mac join otaa\r\n");
+    _delay_ms(300);
+    
+    /* Receive first response*/
+    while(!response)
     {
-        if(UART1_IsTxReady())
+        /* Look for the Deliminator */
+        if (ringBuffer_find(&rxBuffer, "\r"))
         {
-            UART1_Write(ringBuffer_pop(&tx_buffer));
+            if (ringBuffer_find(&rxBuffer, "ok"))
+            {
+                ringBuffer_flushReadBuffer(&rxBuffer);
+                printf("\r\nSuccessfully sent join request...\r\n"); 
+                response = true;
+            }
+            else if (ringBuffer_find(&rxBuffer, "keys_not_init"))
+            {
+                printf("\r\nIncorrect keys, check again and reprogram\r\n");
+                response = true;
+            }
         }
     }
+    
+    //Advance the buffer to the newline character
+    ringBuffer_advanceToString(&rxBuffer, "\r\n");
+    
+    _delay_ms(300);
+    /* Receive 2nd response */
+    response = false;
+    while(!response)
+    {
+        /* Look for the Deliminator */
+        if (ringBuffer_find(&rxBuffer, "\r"))
+        {
+            if (ringBuffer_find(&rxBuffer, "accepted"))
+            {
+                //Advance the buffer to the newline character
+                ringBuffer_flushReadBuffer(&rxBuffer);
+                printf("\r\nJoin accept message received...\r\nRx: accepted\r\n");
+                accepted = true;
+                response = true;
+            }
+            else if (ringBuffer_find(&rxBuffer, "denied"))
+            {
+                //Advance the buffer to the newline character
+                ringBuffer_flushReadBuffer(&rxBuffer);
+                printf("\r\nNode did not receive an accept message.\r\n");
+                printf("\r\nNode has not joined. The gateway may be ignoring your request (MIC fail).\r\n");
+                printf("The application may be expecting a different APPKEY or your device is too close to the gateway\r\n");
+                printf("Move your device to at least ~10m away and if possible check the gateway log to verify.\r\n");
+                accepted = false;
+                response = true;
+            }
+        }
+    }
+    if(accepted) {
+        RN2xx3_save();
+    }
+    return accepted;
+}
+
+/* During and ABP join request, the RN2xx3 does not send an request message.
+ * Receiving an accept response to an mac join abp, means that keys have been
+ * configured correctly. */
+bool RN2xx3_join_ABP()
+{
+    bool response = false;
+    bool accepted = false;
+    printf("\nAttempting to join over ABP...\n");
+    
+    ringBuffer_flushReadBuffer(&rxBuffer);
+    
+    RN2xx3_cmd("mac join abp\r\n");
     _delay_ms(100);
-    RN2xx3_resp2();
-}
-
-void RN2xx3_join_ABP()
-{
-    /* For debug purposes, prints the command on the terminal */
-    USART0_sendStr("\n\nJoining TTN with ABP\n");
-    USART0_sendStr("-----------------------------------------------------------------------\n");
-    USART0_sendStr("Tx: mac join abp\n");
     
-    /* Add the command string to the RN2xx3 txBuffer */
-    ringBuffer_pushStr(&tx_buffer, "mac join abp\r\n");
-       
-    /* Transmit join request over the RN2xx3 UART */
-    while(ringBuffer_count(&tx_buffer))
-    {
-        if(UART1_IsTxReady())
+    /* Receive first response*/
+    while(!response)
+     {
+        /* Look for the Deliminator */
+        if (ringBuffer_find(&rxBuffer, "\r"))
         {
-            UART1_Write(ringBuffer_pop(&tx_buffer));
+            if (ringBuffer_find(&rxBuffer, "ok"))
+            {
+                ringBuffer_flushReadBuffer(&rxBuffer);
+                printf("\r\nSuccessfully sent request...\r\n"); 
+                response = true;
+            }
+            else if (ringBuffer_find(&rxBuffer, "keys_not_init"))
+            {
+                printf("\r\nIncorrect keys, check again and reprogram\r\n");
+                response = true;
+            }
         }
     }
-    _delay_ms(10);
     
-    // Joining over ABP does not require response from the TTN Join Server, the
-    // RN2xx3 will respond with ok, then accepted after making sure necessary
-    // keys are stored in EEPROM.  resp2() is called to receive both responses.
-    RN2xx3_resp2();
-}
+    //Advance the buffer to the newline character
+    ringBuffer_advanceToString(&rxBuffer, "\r\n");
+    
+    /* Receive 2nd response */
+    response = false;
+    while(!response)
+    {
+        /* Look for the Deliminator */
+        if (ringBuffer_find(&rxBuffer, "\r"))
+        {
+            if (ringBuffer_find(&rxBuffer, "accepted"))
+            {
+                printf("\r\nRx: accepted\nABP is configured properly...\r\n");
+                accepted = true;
+                response = true;
+            }
+        }
+    }
+    if(accepted) {
+        RN2xx3_save();
+    }
+    return accepted;
+}  
 
-void RN2xx3_join_TTN()
+bool RN2xx3_join_TTN()
 {
 #ifdef OTAA
-    RN2xx3_join_OTAA();
+    return RN2xx3_join_OTAA();
 #endif
     
 #ifdef ABP
-    RN2xx3_join_ABP();
+    return RN2xx3_join_ABP();
 #endif
-    RN2xx3_save();
-    printf("\nPress button to transmit data\n");
 }
 
 void RN2xx3_tx_cnf(const char *str)
 {
+    bool response = false;
+    
+    /* Clear the receive buffer */
+    ringBuffer_flushReadBuffer(&rxBuffer);
+    
     /* For debug purposes, prints the command on the terminal */
-    USART0_sendStr("\n\nTransmitting Data\n");
-    USART0_sendStr("----------------------------------------------------\n");
-    USART0_sendStr("\nTx: mac tx cnf " PORT_CNF " ");
-    USART0_sendStr(str);
+    printf("\n\nTransmitting Data\n");
+    printf("----------------------------------------------------\n");
+    printf("\nTx: mac tx cnf " PORT_CNF);
+    printf(str);
+    _delay_ms(120);
+
+    /* Concatenate the unconfirmed tx string  */
+    ringBuffer_loadCharacters(&txBuffer, "mac tx cnf ", 11);
+    ringBuffer_loadCharacters(&txBuffer, PORT_CNF , 3);
+    ringBuffer_loadCharacters(&txBuffer, str, 10);
     
-    /* Send Transmission to LR2 UART Tx */
-    ringBuffer_pushStr(&tx_buffer,"mac tx cnf " PORT_CNF " " );
-    ringBuffer_pushStr(&tx_buffer, str);
-    
-    /* Transmit payload over the RN2xx3 UART */
-    while(ringBuffer_count(&tx_buffer))
+    /* Transmit the buffered message over the RN2xx3 UART */
+    while(!ringBuffer_isEmpty(&txBuffer))
     {
-        if(UART1_IsTxReady())
+        if(RN2xx3_TX_IS_READY())
         {
-            UART1_Write(ringBuffer_pop(&tx_buffer));
+            RN2xx3_TX_SEND(ringBuffer_getChar(&txBuffer));
         }
     }
-    _delay_ms(500);
-    RN2xx3_resp2();
-    RN2xx3_save();
+    _delay_ms(10);
+    
+    /* Receive first response*/
+    while(!response)
+    {
+        /* Look for the \r deliminator, then respond to different cases */
+        if (ringBuffer_find(&rxBuffer, "\r"))
+        {
+            if (ringBuffer_find(&rxBuffer, "ok"))
+            {
+                printf("\r\nParameters and configurations are valid. \r\nThe "
+                        "packet was forwarded to the radio for Tx.\r\n"); 
+                response = true;
+            }
+            else if (ringBuffer_find(&rxBuffer, "invalid_param"))
+            {
+                printf("\r\nPort, data, and/or type(cnf or uncnf) not valid.\r\n");
+                response = true;
+            }
+            else if (ringBuffer_find(&rxBuffer, "not_joined"))
+            {
+                printf("\r\nThe node is not joined with the network.\r\n"
+                        "Payload not sent.\r\n");
+                response = true;
+            }
+            else if (ringBuffer_find(&rxBuffer, "invalid_data_len"))
+            {
+                printf("\r\nThe payload is too large for the data rate.\r\n");
+                response = true;
+            }          
+        }
+    }
+    
+    //Advance the buffer to the newline character
+    ringBuffer_advanceToString(&rxBuffer, "\r\n");
+    
+    _delay_ms(300);
+    
+    /* Receive 2nd response */
+    response = false;
+    while(!response)
+    {
+        /* Look for the Deliminator */
+        if (ringBuffer_find(&rxBuffer, "\r"))
+        {
+            if (ringBuffer_find(&rxBuffer, "mac_tx_ok"))
+            {
+                printf("\r\nRadio successfully transmitted the confirmed uplink.\r\n");
+                response = true;
+            }
+            else if (ringBuffer_find(&rxBuffer, "invalid_data_len"))
+            {
+                printf("\r\nThe payload is too large for the data rate.\r\n");
+                printf("This can occur if back-off (retransmissions) changed the datarate.\r\n");
+                response = true;
+            }
+            else if (ringBuffer_find(&rxBuffer, "mac_err"))
+            {
+                printf("\r\nAn ACK was not received back from the server.\r\n");
+                response = true;
+            }
+        }
+    }
 }
 
 void RN2xx3_tx_uncnf(const char *str)
 {
+    bool response = false;
+    
+    /* Clear the receive buffer */
+    ringBuffer_flushReadBuffer(&rxBuffer);
+    
     /* For debug purposes, prints the command on the terminal */
-    USART0_sendStr("\n\nTransmitting Data\n");
-    USART0_sendStr("----------------------------------------------------\n");
-    USART0_sendStr("\nTx: mac tx uncnf " PORT_UNCNF " ");
-    USART0_sendStr(str);
+    printf("\n\nTransmitting Data\n");
+    printf("----------------------------------------------------\n");
+    printf("\nTx: mac tx uncnf " PORT_UNCNF);
+    printf(str);
+    _delay_ms(120);
 
-    //Send Transmission to LR2 UART Tx
-    ringBuffer_pushStr(&tx_buffer,"mac tx uncnf " PORT_UNCNF " ");
-    ringBuffer_pushStr(&tx_buffer, str);
+    /* Concatenate the unconfirmed tx string  */
+    ringBuffer_loadCharacters(&txBuffer, "mac tx uncnf ", 13);
+    ringBuffer_loadCharacters(&txBuffer, PORT_UNCNF , 3);
+    ringBuffer_loadCharacters(&txBuffer, str, 10);
     
-    /* Transmit payload over the RN2xx3 UART */
-    while(ringBuffer_count(&tx_buffer))
+    /* Transmit the buffered message over the RN2xx3 UART */
+    while(!ringBuffer_isEmpty(&txBuffer))
     {
-        if(UART1_IsTxReady())
+        if(RN2xx3_TX_IS_READY())
         {
-            UART1_Write(ringBuffer_pop(&tx_buffer));
+            RN2xx3_TX_SEND(ringBuffer_getChar(&txBuffer));
         }
     }
-    _delay_ms(100);
-    RN2xx3_resp2();
-    RN2xx3_save();
-}
-
-void RN2xx3_get_status()
-{
-    uint8_t recv = 0;
-    const char* str = "mac get status\r\n";
+    _delay_ms(10);
     
-    //Print Command to the Terminal for Debug Purposes
-    USART0_sendStr("\r\nTx: ");
-    USART0_sendStr(str);
-    
-    //Add the command string to the RN2xx3 txBuffer
-    ringBuffer_pushStr(&tx_buffer, str);
-    
-    //Transmit over the RN2xx3 UART
-    for (uint8_t i = 0; str[i] != '\0'; )
+    /* Receive first response*/
+    while(!response)
     {
-        if (ringBuffer_count(&tx_buffer) && UART1_IsTxReady())
+        /* Look for the \r deliminator, then respond to different cases */
+        if (ringBuffer_find(&rxBuffer, "\r"))
         {
-            UART1_Write(ringBuffer_pop(&tx_buffer));
-            i++;
+            if (ringBuffer_find(&rxBuffer, "ok"))
+            {
+                printf("\r\nParameters and configurations are valid. \r\nThe "
+                        "packet was forwarded to the radio for Tx.\r\n"); 
+                response = true;
+            }
+            else if (ringBuffer_find(&rxBuffer, "invalid_param"))
+            {
+                printf("\r\nPort, data, and/or type(cnf or uncnf) not valid.\r\n");
+                response = true;
+            }
+            else if (ringBuffer_find(&rxBuffer, "not_joined"))
+            {
+                printf("\r\nThe node is not joined with the network.\r\n"
+                        "Payload not sent.\r\n");
+                response = true;
+            }
+            else if (ringBuffer_find(&rxBuffer, "invalid_data_len"))
+            {
+                printf("\r\nThe payload is too large for the data rate.\r\n");
+                response = true;
+            }          
         }
     }
-    _delay_ms(100);
     
-    USART0_sendStr("Rx: ");
-    while(recv != 1)
+    _delay_ms(300);
+    
+    //Advance the buffer to the newline character
+    ringBuffer_advanceToString(&rxBuffer, "\r\n");
+    
+    /* Receive 2nd response */
+    response = false;
+    while(!response)
     {
-        if(UART1__IsRxReady()) {
-            ringBuffer_push(&rx_buffer, UART1_Read());
-        }
-
-        if(ringBuffer_count(&rx_buffer) && UART0_IsTxReady()) {
-            char rx = ringBuffer_pop(&rx_buffer);
-            USART0_sendByte(rx);
-            if(rx == '\n') {
-                recv++;
-            }  
+        /* Look for the Deliminator */
+        if (ringBuffer_find(&rxBuffer, "\r"))
+        {
+            if (ringBuffer_find(&rxBuffer, "mac_tx_ok"))
+            {
+                printf("\r\nRadio successfully transmitted the unconfirmed uplink.\r\n");
+                //tx_ok = true;
+                response = true;
+            }
+            else if (ringBuffer_find(&rxBuffer, "invalid_data_len"))
+            {
+                printf("\r\nThe payload is too large for the data rate.\r"
+                        "This can occur if back-off (retransmissions) changed the dr.\r\n");
+                response = true;
+            }
+            else if (ringBuffer_find(&rxBuffer, "mac_err"))
+            {
+                printf("\r\nAN ACK was not received back from the server.\r\n");
+                response = true;
+            }
         }
     }
-    USART0_sendByte('\n');
-    _delay_ms(500); 
 }
 
 void RN2xx3_interface() 
 {
         if(UART0__IsRxReady()) {
-            ringBuffer_push(&tx_buffer, UART0_Read());
+            ringBuffer_loadCharacter(&txBuffer, UART0_Read());
         }    
-        if(UART1__IsRxReady()) {
-            ringBuffer_push(&rx_buffer, UART1_Read());
+        if(!ringBuffer_isEmpty(&rxBuffer) && UART0_IsTxReady()) {
+            UART0_Write(ringBuffer_getChar(&rxBuffer));
         }
-        if(ringBuffer_count(&rx_buffer) && UART0_IsTxReady()) {
-            UART0_Write(ringBuffer_pop(&rx_buffer));
-        }
-        if(ringBuffer_count(&tx_buffer) && UART1_IsTxReady()) {
-            UART1_Write(ringBuffer_pop(&tx_buffer));
-        }
-    
+        if(!ringBuffer_isEmpty(&txBuffer) && RN2xx3_TX_IS_READY()) {
+            RN2xx3_TX_SEND(ringBuffer_getChar(&txBuffer));
+        }  
 }
 
-void RN2xx3_sleep(uint32_t ms)
-{
-    /* Add sleep command to the buffer */
-    ringBuffer_pushStr(&tx_buffer,"sys sleep 180000");
-    //ringBuffer_pushStr(&tx_buffer, ms);
-    
-    /* Transmit the sleep command */
-    while(ringBuffer_count(&tx_buffer))
-    {
-        if(UART1_IsTxReady())
-        {
-            UART1_Write(ringBuffer_pop(&tx_buffer));
-        }
-    }
-}

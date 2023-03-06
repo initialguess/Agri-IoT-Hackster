@@ -16,7 +16,7 @@ extern "C" {
     
 /* Enable print statements for Rx and Tx
  * TODO: add if def's around send to terminal cmds */
-#define DEBUG  
+//#define DEBUG  
 
 /* Enable one activation method by commenting out the other */
 //#define ABP    // Activation By Personalization
@@ -33,14 +33,21 @@ extern "C" {
    
 /* OTAA Session Keys */
 #define APPEUI "0000000000000000"
-#define APPKEY "B460447FC9E89C6D5FE9CED088647935" 
+#define APPKEY "89D3A430C382D94C80BB19E4EA083009"
+//#define APPKEY "00000000000000000000000000000000"
+    
+/* TTN Settings */
+#define RX1_DELAY "5000"   
 
-/* LR2 Command and Response Strings Maximum Size */
+/* RN2xx3 Command and Response Strings Maximum Size */
 #define RN2xx3_BUFFER_SIZE            255
     
 /* Port Designations */
-#define PORT_CNF    "10"
-#define PORT_UNCNF  "11"
+#define PORT_CNF    "10 "
+#define PORT_UNCNF  "11 "
+    
+/* TTN Transmit Interval */
+#define TX_INTERVAL_SEC 180    
     
 typedef enum {
     RN2903,
@@ -53,33 +60,29 @@ typedef enum  {
   TTN_US,
   DEFAULT_EU
 } FREQ_PLAN_t;
-    
+
+    void loadCharacterToBuffer(char c);    
     void RN2xx3_resp(void);
     void RN2xx3_resp2(void);
     void RN2xx3_cmd(const char *str);
     void RN2xx3_mac_pause(void);
     void RN2xx3_getHWEUI();
+    void RN2xx3_sys_RESET();
+    void RN2xx3_mac_reset();
+    void RN2xx3_mac_get_status();
     void RN2xx3_init(void);
     void RN2xx3_save(void);
-    void RN2xx3_set_freq_plan(RN2xx3_t moduleType);
+    void RN2xx3_set_freq_plan();
     void RN2xx3_config_OTAA(void);
     void RN2xx3_config_ABP(void);
     void RN2xx3_config_TTN(void);
-    void RN2xx3_join_OTAA(void);
-    void RN2xx3_join_ABP(void);
-    void RN2xx3_join_TTN(void);
+    bool RN2xx3_join_OTAA(void);
+    bool RN2xx3_join_ABP(void);
+    bool RN2xx3_join_TTN(void);
     void RN2xx3_tx_cnf(const char *str);
     void RN2xx3_tx_uncnf(const char *str);
-    //Searches for STR in the buffer
-    //Returns true if found, false if not.
-    //bool ringBuffer_find(ring_buffer_t* buffer, const char* str);
     void RN2xx3_get_status();
     void RN2xx3_interface();
-    void RN2xx3_sleep(uint32_t ms);
-    
-
-
-
 
 #ifdef	__cplusplus
 }

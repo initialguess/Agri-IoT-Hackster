@@ -30,11 +30,8 @@
     EXCEED AMOUNT OF FEES, IF ANY, YOU PAID DIRECTLY TO MICROCHIP FOR 
     THIS SOFTWARE.
 */
-#include "mcc_generated_files/system/system.h"
 #include "application.h"
-#include <avr/sleep.h>
-#include <util/delay.h>
-#include "avr/io.h"
+#include "mcc_generated_files/system/system.h"
 
 /*
     Main application
@@ -44,22 +41,26 @@ int main(void)
 {
     SYSTEM_Initialize();
     
+    /* Setup Baremetal USART1 Communication for RN2xx3 */
+    USART1_init();
+    
+    /* Enable TX and RX */
+    USART1_enableTX();
+    USART1_enableRX();
+    
     /* Initialize TWI Host Driver */
     TWI_initHost();
     
-    /* Register Timer Callbacks */
+    /* Register Callback functions*/
+    USART1_setRXCallback(&loadCharacterToBuffer);
     TCB0_CaptureCallbackRegister(BUTTON_debounce);
-    TCB1_CaptureCallbackRegister(TIMER_ms);
     RTC_SetPITIsrCallback(RTC_PIT_Callback);
     
-    printf("Welcome to the Agri-IoT.\n\n");
-
+    //Enable Interrupts
+    sei();
+    
     while(1)
     {
         stateMachine();
-    }
-    
-}   
-
-
-
+    }    
+}

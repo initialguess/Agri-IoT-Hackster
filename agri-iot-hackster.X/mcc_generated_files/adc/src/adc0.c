@@ -43,8 +43,8 @@ int8_t ADC0_Initialize(void)
     // SAMPNUM No accumulation; 
     ADC0.CTRLB = 0x0;
 
-    // PRESC CLK_PER divided by 2; 
-    ADC0.CTRLC = 0x0;
+    // PRESC CLK_PER divided by 4; 
+    ADC0.CTRLC = 0x1;
 
     // INITDLY DLY0; SAMPDLY DLY0; 
     ADC0.CTRLD = 0x0;
