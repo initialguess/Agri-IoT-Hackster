@@ -56,26 +56,6 @@ void printRawValue() {
     printf("%d\n", val);
 }
 
-//Get 100 raw values from soil moisture sensor for calibration
-void printRawValues() {
-    uint16_t count = 0;
-    uint16_t val;
-    
-    printf("\nAfter 1000 Moisture Readings\n");
-    printf("-----------------------------------------------------------------------\n");
-    while(count < 1000) {
-        val = ADC0_GetConversion(ADC_MUXPOS_AIN2_gc);
-        soil.min = (val < soil.min) ? val : IN_MIN;
-        soil.max = (val > soil.min) ? val : IN_MAX;
-        count++;
-    }
-    printf("The MAX reading was %d\n", soil.max);
-    printf("The MIN reading was %d\n\n", soil.min);
-    
-    printf("The MAX maps to %d\n", map(soil.max));
-    printf("The MIN maps to %d\n", map(soil.min));
-}
-
 uint8_t map(uint16_t raw) {    
     float val;
     
@@ -257,7 +237,14 @@ void stateMachine()
             if(!RN2xx3_join_TTN())   {
                 /* There was a problem joining TTN, do not attempt to transmit */
                 printf("Entering interactive terminal to troubleshoot.\r\n");
-                state = TTN_NOT_JOINED;        
+                //RN2xx3_sys_RESET();
+                if(!RN2xx3_mac_reset()) {
+                    RN2xx3_mac_reset();
+                }
+                RN2xx3_config_ABP();
+                RN2xx3_join_ABP();              
+                state = TX_UNCNF;
+                break;
             }
             /* Join successful so transmit initial confirmed packet */
             else {
@@ -274,15 +261,18 @@ void stateMachine()
             getSensorData(&data);
             printSensorData(&data);
             formatPayload(payload, &data);
-            RN2xx3_tx_cnf(payload);
+            if(!RN2xx3_tx_cnf(payload)){
+                printf("Tx unsuccessful, entering sleep.\r\n");
+                
+            }
             /* Wait 6 seconds to leave RX2 window open before putting to sleep */
-            _delay_ms(6000);
+            //_delay_ms(6000);
             
             /* Put RN2xx3 to sleep, make sure the interval (in ms) is less than
              * the Tx interval (TX_INTERVAL_SEC) which is in seconds.
              * When RN2xx3  wakes up, either an 'ok' will appear in the rxBuffer
              * or 'invalid_param' when improperly formatted or too long */
-            RN2xx3_cmd("sys sleep 90000\r\n");
+            //RN2xx3_cmd("sys sleep 90000\r\n");
             
             /* Start the PIT in preparation for MCU sleep */
             RTC_Start();
@@ -316,15 +306,17 @@ void stateMachine()
             getSensorData(&data);
             printSensorData(&data);
             formatPayload(payload, &data);
-            RN2xx3_tx_uncnf(payload);
+            if(!RN2xx3_tx_uncnf(payload)) {
+                printf("Tx unsuccessful, entering sleep.\r\n");
+            }
             /* Wait 6 seconds to leave RX2 window open before putting to sleep */
-            _delay_ms(6000);
+            //_delay_ms(6000);
             
             /* Put RN2xx3 to sleep, make sure the interval (in ms) is less than
              * the Tx interval (TX_INTERVAL_SEC) which is in seconds.
              * When RN2xx3  wakes up, either an 'ok' will appear in the rxBuffer
              * or 'invalid_param' when improperly formatted or too long */
-            RN2xx3_cmd("sys sleep 90000\r\n");
+            //RN2xx3_cmd("sys sleep 90000\r\n");
             
             /* Start the PIT in preparation for MCU sleep */
             RTC_Start();

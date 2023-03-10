@@ -58,14 +58,37 @@ void RN2xx3_sys_RESET()
     ringBuffer_flushReadBuffer(&rxBuffer);
     RN2xx3_cmd("sys factoryRESET\r\n");
     _delay_ms(5000);
-    ringBuffer_copyBuffer(&rxBuffer, &ver[0], VERSION_SIZE);
-    printf("Firmware version: %s\r\n", ver);
 }
 
-void RN2xx3_mac_reset()
+bool RN2xx3_mac_reset()
 {
+    bool response = false;
+    bool reset_ok = false;
     RN2xx3_cmd("mac reset\r\n");
     _delay_ms(50);
+    
+        /* Receive first response*/
+    while(!response)
+    {
+        /* Look for the \r deliminator, then respond to different cases */
+        if (ringBuffer_find(&rxBuffer, "\r"))
+        {
+            if (ringBuffer_find(&rxBuffer, "ok"))
+            {
+                reset_ok = true;
+                response = true;
+            }
+            else if (ringBuffer_find(&rxBuffer, "invalid_param"))
+            {
+                response = true;
+            }         
+        }
+    }
+    
+    //Advance the buffer to the newline character
+    ringBuffer_advanceToString(&rxBuffer, "\r\n");
+    
+    return reset_ok;
 }
 
 void RN2xx3_mac_get_status()
@@ -229,7 +252,9 @@ void RN2xx3_config_OTAA()
 {
     /* Add a mac reset if you plan to power cycle between joins, remove if not 
      * additionally you may need to reset the mac on the TTN side */
-    RN2xx3_cmd("mac reset\r\n");
+    if(!RN2xx3_mac_reset()) {
+        RN2xx3_mac_reset();
+    }
     
     printf("\r\nConfiguring for OTAA join (expect ~10 sec to set channel frequency plan)...\n");
     RN2xx3_cmd("mac pause\r\n");
@@ -244,10 +269,10 @@ void RN2xx3_config_OTAA()
     RN2xx3_cmd("mac set rxdelay1 " RX1_DELAY "\r\n");
     
     /* Needed to change to 13 (SF7/500 kHz) when ~50 m away, when gateway is
-     * over 200m use default 8 (SF12/ 500 kHz other wise strength of accept 
+     * over 200m use default 8 (SF12/ 500 kHz otherwise strength of accept 
      * message causes bleed into other channels and RN2xx3 will ignore and
      * output denied on Rx */
-    RN2xx3_cmd("mac set rx2 12 923300000\r\n");
+    RN2xx3_cmd("mac set rx2 8 923300000\r\n");
     RN2xx3_cmd("mac set adr on\r\n");
     RN2xx3_set_freq_plan();
     RN2xx3_save(); 
@@ -344,7 +369,7 @@ bool RN2xx3_join_ABP()
     ringBuffer_flushReadBuffer(&rxBuffer);
     
     RN2xx3_cmd("mac join abp\r\n");
-    _delay_ms(100);
+    _delay_ms(300);
     
     /* Receive first response*/
     while(!response)
@@ -357,6 +382,7 @@ bool RN2xx3_join_ABP()
                 ringBuffer_flushReadBuffer(&rxBuffer);
                 printf("\r\nSuccessfully sent request...\r\n"); 
                 response = true;
+                accepted = true;
             }
             else if (ringBuffer_find(&rxBuffer, "keys_not_init"))
             {
@@ -366,27 +392,9 @@ bool RN2xx3_join_ABP()
         }
     }
     
-    //Advance the buffer to the newline character
-    ringBuffer_advanceToString(&rxBuffer, "\r\n");
-    
-    /* Receive 2nd response */
-    response = false;
-    while(!response)
-    {
-        /* Look for the Deliminator */
-        if (ringBuffer_find(&rxBuffer, "\r"))
-        {
-            if (ringBuffer_find(&rxBuffer, "accepted"))
-            {
-                printf("\r\nRx: accepted\nABP is configured properly...\r\n");
-                accepted = true;
-                response = true;
-            }
-        }
-    }
-    if(accepted) {
-        RN2xx3_save();
-    }
+    /* Clear the receive buffer */
+    ringBuffer_flushReadBuffer(&rxBuffer);
+
     return accepted;
 }  
 
@@ -401,9 +409,10 @@ bool RN2xx3_join_TTN()
 #endif
 }
 
-void RN2xx3_tx_cnf(const char *str)
+bool RN2xx3_tx_cnf(const char *str)
 {
     bool response = false;
+    bool tx_ok = false;
     
     /* Clear the receive buffer */
     ringBuffer_flushReadBuffer(&rxBuffer);
@@ -457,6 +466,7 @@ void RN2xx3_tx_cnf(const char *str)
             {
                 printf("\r\nThe payload is too large for the data rate.\r\n");
                 response = true;
+                return false;
             }          
         }
     }
@@ -464,7 +474,7 @@ void RN2xx3_tx_cnf(const char *str)
     //Advance the buffer to the newline character
     ringBuffer_advanceToString(&rxBuffer, "\r\n");
     
-    _delay_ms(300);
+    _delay_ms(100);
     
     /* Receive 2nd response */
     response = false;
@@ -477,23 +487,28 @@ void RN2xx3_tx_cnf(const char *str)
             {
                 printf("\r\nRadio successfully transmitted the confirmed uplink.\r\n");
                 response = true;
+                tx_ok = true;
             }
             else if (ringBuffer_find(&rxBuffer, "invalid_data_len"))
             {
                 printf("\r\nThe payload is too large for the data rate.\r\n");
                 printf("This can occur if back-off (retransmissions) changed the datarate.\r\n");
                 response = true;
+                return false;
             }
             else if (ringBuffer_find(&rxBuffer, "mac_err"))
             {
                 printf("\r\nAn ACK was not received back from the server.\r\n");
+                RN2xx3_cmd("mac reset/r/n");
                 response = true;
             }
         }
     }
+    _delay_ms(300);
+    return tx_ok;
 }
 
-void RN2xx3_tx_uncnf(const char *str)
+bool RN2xx3_tx_uncnf(const char *str)
 {
     bool response = false;
     
@@ -538,6 +553,7 @@ void RN2xx3_tx_uncnf(const char *str)
             {
                 printf("\r\nPort, data, and/or type(cnf or uncnf) not valid.\r\n");
                 response = true;
+                return false;
             }
             else if (ringBuffer_find(&rxBuffer, "not_joined"))
             {
@@ -549,11 +565,12 @@ void RN2xx3_tx_uncnf(const char *str)
             {
                 printf("\r\nThe payload is too large for the data rate.\r\n");
                 response = true;
+                return false;
             }          
         }
     }
     
-    _delay_ms(300);
+    _delay_ms(100);
     
     //Advance the buffer to the newline character
     ringBuffer_advanceToString(&rxBuffer, "\r\n");
@@ -576,6 +593,7 @@ void RN2xx3_tx_uncnf(const char *str)
                 printf("\r\nThe payload is too large for the data rate.\r"
                         "This can occur if back-off (retransmissions) changed the dr.\r\n");
                 response = true;
+                return false;
             }
             else if (ringBuffer_find(&rxBuffer, "mac_err"))
             {
@@ -584,6 +602,7 @@ void RN2xx3_tx_uncnf(const char *str)
             }
         }
     }
+    return true;
 }
 
 void RN2xx3_interface() 

@@ -24,12 +24,12 @@ extern "C" {
     
 /* Device EUI and Address */
 #define HWEUI  "0004A30B00F8617E"    
-#define DEVEUI "70B3D57ED005AA0B"
-#define DEVADDR "260C22B6"
+#define DEVEUI "70B3D57ED005B4D8"
+#define DEVADDR "260CCF50"
     
 /* ABP Session Keys */
-#define NWKSKEY "6C070B126529F856D4627E5B42535035"
-#define APPSKEY "501C3129E36C0C565DDD311285C8F534"
+#define NWKSKEY "8D09B5C64C7A6836397F33B1C81552B7"
+#define APPSKEY "5D05E8652EF022543EC92D0AF1F92AD1"
    
 /* OTAA Session Keys */
 #define APPEUI "0000000000000000"
@@ -68,7 +68,7 @@ typedef enum  {
     void RN2xx3_mac_pause(void);
     void RN2xx3_getHWEUI();
     void RN2xx3_sys_RESET();
-    void RN2xx3_mac_reset();
+    bool RN2xx3_mac_reset();
     void RN2xx3_mac_get_status();
     void RN2xx3_init(void);
     void RN2xx3_save(void);
@@ -79,8 +79,8 @@ typedef enum  {
     bool RN2xx3_join_OTAA(void);
     bool RN2xx3_join_ABP(void);
     bool RN2xx3_join_TTN(void);
-    void RN2xx3_tx_cnf(const char *str);
-    void RN2xx3_tx_uncnf(const char *str);
+    bool RN2xx3_tx_cnf(const char *str);
+    bool RN2xx3_tx_uncnf(const char *str);
     void RN2xx3_get_status();
     void RN2xx3_interface();
 
