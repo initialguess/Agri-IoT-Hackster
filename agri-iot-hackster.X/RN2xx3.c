@@ -241,8 +241,7 @@ void RN2xx3_config_ABP()
     RN2xx3_cmd("mac set rx2 12 923300000\r\n");
     RN2xx3_cmd("mac set adr on\r\n");
     RN2xx3_set_freq_plan();
-    RN2xx3_save();
-    
+    RN2xx3_save();    
 }
 /* Only DEVEUI, APPKEY, and APPEUI are necessary for OTAA, but DEVADDR, APPSKEY,
  * and NWKSKEY are cleared.  When registering devices on TTN, the HWEUI was used
