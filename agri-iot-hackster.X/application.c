@@ -238,10 +238,10 @@ void stateMachine()
                 /* There was a problem joining TTN, do not attempt to transmit */
                 printf("Entering interactive terminal to troubleshoot.\r\n");
                 //RN2xx3_sys_RESET();
-                if(!RN2xx3_mac_reset()) {
-                    RN2xx3_mac_reset();
-                }
-                RN2xx3_config_ABP();
+//                if(!RN2xx3_mac_reset()) {
+//                    RN2xx3_mac_reset();
+//                }
+                //RN2xx3_config_ABP();
                 RN2xx3_join_ABP();              
                 state = TX_UNCNF;
                 break;

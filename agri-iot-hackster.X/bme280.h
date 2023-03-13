@@ -21,7 +21,7 @@ extern "C" {
      */
 
 // Device Elevation
-#define ELEVATION 371
+#define ELEVATION 366       // in meters
     
 // Device Information
 #define BME280_ADDR     			0x76
