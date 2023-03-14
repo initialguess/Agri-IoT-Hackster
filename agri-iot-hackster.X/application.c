@@ -16,7 +16,7 @@ char payload[11];
 static sensor_data_t data;
 
 /* Structure for soil measurements */
-static moist_range_t soil;
+//static moist_range_t soil;
 
 /* Event Flags for User Interface */
 static volatile uint16_t event_flags = 0;

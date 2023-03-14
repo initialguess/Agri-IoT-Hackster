@@ -24,7 +24,6 @@ RN2xx3_t modType;
 
 /* Static Character Buffers  */
 static char hweui[HWEUI_SIZE];
-static char ver[VERSION_SIZE];
 static char status[STATUS_SIZE];
 
 /* Function to Load Data Into Ring Buffer */
@@ -272,8 +271,9 @@ void RN2xx3_config_OTAA()
      * message causes bleed into other channels and RN2xx3 will ignore and
      * output denied on Rx */
     RN2xx3_cmd("mac set rx2 13 923300000\r\n");
+    RN2xx3_cmd("mac set dr 1\r\n");
     RN2xx3_cmd("mac set adr on\r\n");
-    RN2xx3_cmd("mac set dr 3\r\n");
+    
     RN2xx3_set_freq_plan();
     RN2xx3_save(); 
 }
@@ -346,6 +346,7 @@ bool RN2xx3_join_OTAA()
                 printf("\r\nNode has not joined. The gateway may be ignoring your request (MIC fail).\r\n");
                 printf("The application may be expecting a different APPKEY or your device is too close to the gateway\r\n");
                 printf("Move your device to at least ~10m away and if possible check the gateway log to verify.\r\n");
+                printf("It may also try setting a different datarate, if the default dr 0 was used try dr 1.\r\n");
                 accepted = false;
                 response = true;
             }
@@ -370,30 +371,30 @@ bool RN2xx3_join_ABP()
     
     RN2xx3_cmd("mac join abp\r\n");
     _delay_ms(300);
-//    
-//    /* Receive first response*/
-//    while(!response)
-//     {
-//        /* Look for the Deliminator */
-//        if (ringBuffer_find(&rxBuffer, "\r"))
-//        {
-//            if (ringBuffer_find(&rxBuffer, "ok"))
-//            {
-//                ringBuffer_flushReadBuffer(&rxBuffer);
-//                printf("\r\nSuccessfully sent request...\r\n"); 
-//                response = true;
-//                accepted = true;
-//            }
-//            else if (ringBuffer_find(&rxBuffer, "keys_not_init"))
-//            {
-//                printf("\r\nIncorrect keys, check again and reprogram\r\n");
-//                response = true;
-//            }
-//        }
-//    }
-//    
-//    /* Clear the receive buffer */
-//    ringBuffer_flushReadBuffer(&rxBuffer);
+    
+    /* Receive first response*/
+    while(!response)
+     {
+        /* Look for the Deliminator */
+        if (ringBuffer_find(&rxBuffer, "\r"))
+        {
+            if (ringBuffer_find(&rxBuffer, "ok"))
+            {
+                ringBuffer_flushReadBuffer(&rxBuffer);
+                printf("\r\nSuccessfully sent request...\r\n"); 
+                response = true;
+                accepted = true;
+            }
+            else if (ringBuffer_find(&rxBuffer, "keys_not_init"))
+            {
+                printf("\r\nIncorrect keys, check again and reprogram\r\n");
+                response = true;
+            }
+        }
+    }
+    
+    /* Clear the receive buffer */
+    ringBuffer_flushReadBuffer(&rxBuffer);
 
     return accepted;
 }  
